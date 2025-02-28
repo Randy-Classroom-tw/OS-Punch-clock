@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>GD_Office_ANN</title>
+  <!-- 保持原設定，若想調整整頁縮放比例，可修改 initial-scale -->
+  <meta name="viewport" content="width=device-width, initial-scale=0.7" />
+  <!-- 手機 icon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="https://i.imgur.com/segag5B.jpg">
+  <link rel="apple-touch-icon" href="https://i.imgur.com/segag5B.jpg">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap">
+  <style>
+    /*
+      針對各瀏覽器的內建顯示密碼圖示：
+      - Windows (Edge/IE) 用 ::-ms-reveal, ::-ms-clear
+      - iOS Safari 用 ::-webkit-textfield-decoration-container
+      此處不再用 display: none，改為 visibility + pointer-events
+    */
+    input::-ms-reveal,
+    input::-ms-clear {
+      display: none !important;
+    }
+    input[type=password]::-webkit-textfield-decoration-container {
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+
+    /* 重設與字型 */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    body {
+      background: linear-gradient(145deg, #0a0a0a, #1a1a1a);
+      font-family: 'Roboto Mono', monospace;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    /* 主要容器：對稱、立體科技感 */
+    .container {
+      background: rgba(20, 20, 20, 0.95);
+      border: 2px solid #333;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.8), inset 0 2px 4px rgba(255,255,255,0.05);
+      padding: 40px;
+      max-width: 700px;
+      width: 100%;
+      text-align: center;
+    }
+    
+    /* Logo 置中，加入輕微立體感 */
+    .logo {
+      width: 150px;
+      margin: 0 auto 20px;
+      filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.6));
+    }
+    
+    /* 標題風格：大膽、對稱、科技感 */
+    h1 {
+      font-size: 36px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #fff;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+    h2 {
+      font-size: 20px;
+      color: #bbb;
+      margin-bottom: 30px;
+    }
+    
+    /* 表單區塊 */
+    form {
+      background: rgba(40,40,40,0.8);
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.7);
+    }
+    label {
+      display: block;
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: #ccc;
+    }
+    .input-group {
+      position: relative;
+      margin-bottom: 8px;
+    }
+    input[type="password"],
+    input[type="text"],
+    input[type="tel"] {
+      width: 100%;
+      font-size: 20px;
+      padding: 14px 50px 14px 16px;
+      border: none;
+      border-radius: 6px;
+      background-color: #222;
+      color: #fff;
+      text-align: center;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    input:focus {
+      background-color: #333;
+      box-shadow: 0 0 8px rgba(0,176,255,0.6), inset 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .toggle-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: #aaa;
+      font-size: 22px;
+      cursor: pointer;
+      transition: color 0.3s;
+    }
+    .toggle-btn:hover { color: #fff; }
+    
+    /* 按鈕群組 */
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .btn {
+      flex: 1 1 150px;
+      padding: 14px;
+      font-size: 20px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.6), inset 0 -2px 0 rgba(0,0,0,0.2);
+    }
+    .btn:hover { transform: translateY(-3px); }
+    .btn:active { transform: translateY(0); }
+    .btn-on { background: linear-gradient(145deg, #28a745, #1e7e34); color: #fff; }
+    .btn-off { background: linear-gradient(145deg, #e74c3c, #c0392b); color: #fff; }
+    .btn-query { background: linear-gradient(145deg, #3498db, #2980b9); color: #fff; }
+    .btn-test { background: linear-gradient(145deg, #f39c12, #e67e22); color: #fff; }
+    
+    /* 回應訊息 */
+    #response {
+      margin-top: 10px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #76ff03;
+      background: rgba(0,0,0,0.4);
+      border-radius: 6px;
+      padding: 10px;
+      min-height: 40px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.7);
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    #response.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .loading {
+      font-size: 20px;
+      color: #ff4444;
+      font-weight: bold;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0% { opacity: 1; }
+      50% { opacity: 0.4; }
+      100% { opacity: 1; }
+    }
+    
+    /* Modal 視窗 */
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.75);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .overlay.show { display: flex; }
+    .modal {
+      background: #222;
+      padding: 24px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      color: #fff;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.8);
+    }
+    .modal h3 {
+      font-size: 24px;
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+    }
+    .modal p {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: space-evenly;
+    }
+    .modal .btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.3s;
+      box-shadow: none;
+      border: none;
+    }
+    .btn-confirm { background: #28a745; color: #fff; }
+    .btn-cancel { background: #e74c3c; color: #fff; }
+    .btn-confirm:hover { background: #1e7e34; }
+    .btn-cancel:hover { background: #c0392b; }
+    
+    /* 響應式 */
+    @media screen and (max-width: 640px) {
+      .container { padding: 30px; }
+      .logo { width: 120px; }
+      h1 { font-size: 28px; }
+      h2 { font-size: 16px; margin-bottom: 20px; }
+      input { font-size: 18px; }
+      .btn { font-size: 18px; padding: 14px; }
+      #response { font-size: 18px; }
+      .modal h3 { font-size: 22px; }
+      .modal p, .modal .btn { font-size: 16px; }
+    }
+    
+    /* 表格水平滾動 */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .table-responsive table {
+      min-width: 600px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img class="logo" src="https://i.imgur.com/segag5B.jpg" alt="Logo" crossorigin="anonymous">
+    <h1>GD_Office_ANN</h1>
+    <h2>請輸入身分證後四碼執行打卡</h2>
+    
+    <form id="idForm">
+      <label for="idCode">請點擊下方框內輸入後四碼</label>
+      <div class="input-group">
+        <input 
+          type="password" 
+          id="idCode" 
+          name="idCode" 
+          required 
+          pattern="\d{4}" 
+          maxlength="4" 
+          inputmode="numeric"
+          autocomplete="off" 
+          autocorrect="off" 
+          autocapitalize="off" 
+          spellcheck="false"
+        />
+        <button type="button" class="toggle-btn" id="toggleBtn">
+          <span class="material-icons" id="eyeIcon">visibility</span>
+        </button>
+      </div>
+    </form>
+    
+    <div class="btn-group">
+      <button class="btn btn-on" id="btnOn">上班</button>
+      <button class="btn btn-off" id="btnOff">下班</button>
+      <button class="btn btn-query" id="btnQuery">查詢記錄</button>
+      <button class="btn btn-test" id="btnTest">測試定位</button>
+    </div>
+    
+    <div id="response" role="status" aria-live="polite"></div>
+  </div>
+  
+  <div id="overlay" class="overlay">
+    <div class="modal">
+      <h3 id="modal-title">提示</h3>
+      <p id="modal-message">提示訊息</p>
+      <div class="modal-buttons">
+        <button id="modal-confirm" class="btn btn-confirm">確定</button>
+        <button id="modal-cancel" class="btn btn-cancel">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 請換成您重新部署的 exec 網址
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzJv4zMbluGWeACloBJSE0cOOJzkvyBt99XqMLIIhrQ35IrTDiZ49fO4qsFHN1QsHtPgg/exec";
+
+    let lastTestLocationTime = 0;
+    let lastQueryTime = 0;
+    const COOLDOWN_MS = 10000;
+
+    const toggleBtn = document.getElementById("toggleBtn");
+    const idInput = document.getElementById("idCode");
+    const eyeIcon = document.getElementById("eyeIcon");
+    const responseDiv = document.getElementById("response");
+    const overlay = document.getElementById("overlay");
+    const modalMessage = document.getElementById("modal-message");
+    const confirmBtn = document.getElementById("modal-confirm");
+    const cancelBtn = document.getElementById("modal-cancel");
+
+    // 顯示/隱藏密碼按鈕
+    toggleBtn.addEventListener("click", () => {
+      if (idInput.type === "password") {
+        idInput.type = "text";
+        eyeIcon.textContent = "visibility_off";
+      } else {
+        idInput.type = "password";
+        eyeIcon.textContent = "visibility";
+      }
+    });
+
+    // 僅允許輸入數字 + 維持 4 位數檢查
+    idInput.addEventListener("input", () => {
+      if (idInput.value && !/^\d*$/.test(idInput.value)) {
+        alert("請切換輸入法｜輸入正規四碼數字");
+        idInput.value = idInput.value.replace(/\D/g, "");
+      }
+      const pattern = /^\d{0,4}$/;
+      if (!pattern.test(idInput.value)) {
+        idInput.setCustomValidity("請輸入 0 到 4 個數字");
+      } else if (idInput.value.length !== 4) {
+        idInput.setCustomValidity("必須填寫完整 4 位數");
+      } else {
+        idInput.setCustomValidity("");
+      }
+    });
+
+    function displayError(msg) {
+      responseDiv.innerHTML = `<div style="color:red; text-align:center;">${msg}</div>`;
+    }
+
+    function callGAS(functionName, parametersArray) {
+      const formData = new URLSearchParams();
+      formData.append("function", functionName);
+      formData.append("parameters", JSON.stringify(parametersArray));
+      return fetch(WEB_APP_URL, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: formData
+      })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`網路狀態異常, status=${res.status}, message=${res.statusText}`);
+        }
+        return res.json();
+      })
+      .catch(err => {
+        throw new Error(`Fetch error: ${err}`);
+      });
+    }
+
+    function showCustomConfirm(message, onConfirm, onCancel) {
+      modalMessage.textContent = message;
+      overlay.classList.add("show");
+      confirmBtn.onclick = () => {
+        overlay.classList.remove("show");
+        if (onConfirm) onConfirm();
+      };
+      cancelBtn.onclick = () => {
+        overlay.classList.remove("show");
+        if (onCancel) onCancel();
+      };
+    }
+
+    function getDeviceUUID() {
+      let uuid = localStorage.getItem("deviceUUID");
+      if (!uuid) {
+        uuid = generateUUID();
+        localStorage.setItem("deviceUUID", uuid);
+      }
+      return uuid;
+    }
+
+    function generateUUID() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = (c === 'x') ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+
+    async function startClockAction(action, force) {
+      const idCode = idInput.value;
+      responseDiv.innerHTML = "<span class='loading'>檢查中｜請稍候...</span>";
+      responseDiv.classList.add("show");
+      if (!/^\d{4}$/.test(idCode)) {
+        displayError("請先輸入完整的身分證後四碼");
+        return;
+      }
+      if (!navigator.onLine) {
+        displayError("請確認網路連線");
+        return;
+      }
+      try {
+        const result = await callGAS("checkDeviceBinding", [idCode]);
+        if (result.status === "success") {
+          startCountdown(action, force, false);
+        } else if (result.status === "error") {
+          if (result.error === "NOT_BOUND") {
+            showCustomConfirm(
+              "請確認同意綁定本裝置｜作為打卡唯一用途",
+              () => { startCountdown(action, force, true); },
+              () => { responseDiv.innerHTML = "<span style='color:orange;'>已取消打卡</span>"; }
+            );
+          } else {
+            displayError(result.message);
+          }
+        } else {
+          displayError("未知的綁定狀態");
+        }
+      } catch (err) {
+        displayError(`網路檢查失敗: ${err}`);
+      }
+    }
+
+    function startCountdown(action, force, bindDevice) {
+      overlay.classList.add("show");
+      let countdown = 5;
+      modalMessage.textContent = `將於 ${countdown} 秒後建立 ${action} 打卡`;
+      const timer = setInterval(() => {
+        countdown--;
+        modalMessage.textContent = `將於 ${countdown} 秒後建立 ${action} 打卡`;
+        if (countdown <= 0) {
+          clearInterval(timer);
+          overlay.classList.remove("show");
+          handleAction(action, force, bindDevice);
+        }
+      }, 1000);
+
+      cancelBtn.onclick = () => {
+        clearInterval(timer);
+        overlay.classList.remove("show");
+        responseDiv.innerHTML = "<span style='color:orange;'>已取消打卡</span>";
+      };
+      confirmBtn.onclick = () => {
+        clearInterval(timer);
+        overlay.classList.remove("show");
+        handleAction(action, force, bindDevice);
+      };
+    }
+
+    async function handleAction(action, force, bindDevice) {
+      const idCode = idInput.value;
+      responseDiv.innerHTML = "<span class='loading'>審核中｜請稍候...</span>";
+      responseDiv.classList.add("show");
+      try {
+        const coords = await new Promise((resolve, reject) => {
+          getLocation(resolve, reject);
+        });
+        const deviceInfo = JSON.stringify({
+          OS: navigator.platform,
+          Browser: navigator.userAgent
+        });
+        const uuid = getDeviceUUID();
+        const result = await callGAS("gpsCheckin", [idCode, deviceInfo, action, coords.lat, coords.lng, force, bindDevice, uuid]);
+        if (result.status === "success") {
+          let finalMsg = result.message;
+          if (result.detail && result.detail.time) {
+            finalMsg += `<br><span style='color:#fff;'>${result.detail.time}</span>`;
+          }
+          responseDiv.innerHTML = `<div style="color:green; font-weight:bold; text-align:center;">${finalMsg}</div>`;
+        } else if (result.status === "error") {
+          displayError(result.message);
+        } else {
+          displayError("未知的回傳狀態");
+        }
+      } catch (err) {
+        displayError(`連線失敗，請檢查網路: ${err}`);
+      }
+    }
+
+    function getLocation(successCallback, errorCallback) {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            successCallback({ lat: position.coords.latitude, lng: position.coords.longitude });
+          },
+          (error) => {
+            errorCallback("定位失敗｜請開啟定位功能｜確認所在地");
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      } else {
+        errorCallback("此瀏覽器不支援 Geolocation API");
+      }
+    }
+
+    async function testLocation() {
+      const now = Date.now();
+      if (now - lastTestLocationTime < COOLDOWN_MS) {
+        displayError("每10秒得測試一次");
+        return;
+      }
+      lastTestLocationTime = now;
+
+      const idCode = idInput.value;
+      responseDiv.innerHTML = "<span class='loading'>定位測試中｜請稍候...</span>";
+      responseDiv.classList.add("show");
+      if (!/^\d{4}$/.test(idCode)) {
+        displayError("請先輸入完整的身分證後四碼");
+        return;
+      }
+      if (!navigator.onLine) {
+        displayError("離線狀態無法測試定位");
+        return;
+      }
+      try {
+        const coords = await new Promise((resolve, reject) => {
+          getLocation(resolve, reject);
+        });
+        const result = await callGAS("testLocationWithAuth", [idCode, coords.lat, coords.lng]);
+        if (result.status === "success") {
+          responseDiv.innerHTML = result.html ? `<div class="table-responsive">${result.html}</div>` : "無資料";
+        } else {
+          displayError(result.message);
+        }
+      } catch (err) {
+        displayError(`測試定位失敗: ${err}`);
+      }
+    }
+
+    async function queryTodayRecords() {
+      const now = Date.now();
+      if (now - lastQueryTime < COOLDOWN_MS) {
+        displayError("每10秒得查詢一次");
+        return;
+      }
+      lastQueryTime = now;
+
+      const idCode = idInput.value;
+      responseDiv.innerHTML = "<span class='loading'>查詢中｜請稍候...</span>";
+      responseDiv.classList.add("show");
+      if (!/^\d{4}$/.test(idCode)) {
+        displayError("請先輸入完整的身分證後四碼");
+        return;
+      }
+      if (!navigator.onLine) {
+        displayError("離線狀態無法查詢");
+        return;
+      }
+      try {
+        const result = await callGAS("queryTodayRecords", [idCode]);
+        if (result.status === "success") {
+          const tableHTML = result.html ? `<div class="table-responsive">${result.html}</div>` : "無資料";
+          responseDiv.innerHTML = tableHTML;
+        } else {
+          displayError(result.message);
+        }
+      } catch (err) {
+        displayError(`查詢失敗: ${err}`);
+      }
+    }
+
+    document.getElementById("btnOn").addEventListener("click", () => { startClockAction("上班", false); });
+    document.getElementById("btnOff").addEventListener("click", () => { startClockAction("下班", false); });
+    document.getElementById("btnQuery").addEventListener("click", () => { queryTodayRecords(); });
+    document.getElementById("btnTest").addEventListener("click", () => { testLocation(); });
+  </script>
+</body>
+</html>
