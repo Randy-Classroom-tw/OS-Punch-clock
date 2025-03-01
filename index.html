@@ -3,20 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <title>OS_Office_ANN</title>
-  <!-- 保持原設定，若想調整整頁縮放比例，可修改 initial-scale -->
   <meta name="viewport" content="width=device-width, initial-scale=0.7" />
-  <!-- 手機 icon -->
   <link rel="icon" type="image/png" sizes="32x32" href="https://i.imgur.com/7obx0vd.jpg">
   <link rel="apple-touch-icon" href="https://i.imgur.com/7obx0vd.jpg">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap">
   <style>
-    /*
-      針對各瀏覽器的內建顯示密碼圖示：
-      - Windows (Edge/IE) 用 ::-ms-reveal, ::-ms-clear
-      - iOS Safari 用 ::-webkit-textfield-decoration-container
-      此處不再用 display: none，改為 visibility + pointer-events
-    */
+    /* 針對各瀏覽器的內建顯示密碼圖示調整 */
     input::-ms-reveal,
     input::-ms-clear {
       display: none !important;
@@ -392,27 +385,55 @@
       };
     }
 
+    // 檢測無痕模式
+    function detectIncognito() {
+      return new Promise((resolve) => {
+        const fs = window.RequestFileSystem || window.webkitRequestFileSystem;
+        if (!fs) {
+          resolve(false);
+          return;
+        }
+        fs(window.TEMPORARY, 100, () => resolve(false), () => resolve(true));
+      });
+    }
+
+    // 生成設備指紋
+    function generateDeviceFingerprint() {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      ctx.textBaseline = "top";
+      ctx.font = "14px 'Arial'";
+      ctx.fillStyle = "#f60";
+      ctx.fillRect(125, 1, 62, 20);
+      ctx.fillStyle = "#069";
+      ctx.fillText("Fingerprint Test", 2, 15);
+      const canvasData = canvas.toDataURL();
+
+      const fingerprint = [
+        navigator.userAgent,
+        navigator.language,
+        screen.width + "x" + screen.height,
+        canvasData.slice(-10), // 取部分 Canvas 資料，避免過長
+      ].join("|");
+
+      return btoa(fingerprint); // Base64 編碼
+    }
+
+    // 修改 getDeviceUUID，改用指紋
     function getDeviceUUID() {
       let uuid = localStorage.getItem("deviceUUID");
       if (!uuid) {
-        uuid = generateUUID();
+        uuid = generateDeviceFingerprint();
         localStorage.setItem("deviceUUID", uuid);
       }
       return uuid;
-    }
-
-    function generateUUID() {
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0;
-        const v = (c === 'x') ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-      });
     }
 
     async function startClockAction(action, force) {
       const idCode = idInput.value;
       responseDiv.innerHTML = "<span class='loading'>檢查中｜請稍候...</span>";
       responseDiv.classList.add("show");
+
       if (!/^\d{4}$/.test(idCode)) {
         displayError("請先輸入完整的身分證後四碼");
         return;
@@ -421,6 +442,14 @@
         displayError("請確認網路連線");
         return;
       }
+
+      // 檢測無痕模式
+      const isIncognito = await detectIncognito();
+      if (isIncognito) {
+        displayError("請勿使用無痕模式進行打卡，關閉後重試");
+        return;
+      }
+
       try {
         const result = await callGAS("checkDeviceBinding", [idCode]);
         if (result.status === "success") {
@@ -435,8 +464,6 @@
           } else {
             displayError(result.message);
           }
-        } else {
-          displayError("未知的綁定狀態");
         }
       } catch (err) {
         displayError(`網路檢查失敗: ${err}`);
@@ -585,6 +612,14 @@
     document.getElementById("btnOff").addEventListener("click", () => { startClockAction("下班", false); });
     document.getElementById("btnQuery").addEventListener("click", () => { queryTodayRecords(); });
     document.getElementById("btnTest").addEventListener("click", () => { testLocation(); });
+
+    // 頁面載入時檢測無痕模式
+    window.onload = async () => {
+      const isIncognito = await detectIncognito();
+      if (isIncognito) {
+        alert("本系統不支援無痕模式，請使用一般模式以確保打卡功能正常運作。");
+      }
+    };
   </script>
 </body>
 </html>
