@@ -176,52 +176,79 @@
       100% { opacity: 1; }
     }
     
-    /* Modal 視窗 (低調黑色金屬風格) */
+    /* Modal 視窗 */
     .overlay {
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(0,0,0,0.85);
+      background: rgba(0,0,0,0.75);
       display: none;
       justify-content: center;
       align-items: center;
       z-index: 9999;
-      backdrop-filter: blur(2px);
     }
     .overlay.show { display: flex; }
     .modal {
-      background: #111;
-      padding: 24px 32px;
-      border-radius: 8px;
-      border: 1px solid #333;
-      color: #eee;
-      font-family: 'Roboto Mono', monospace;
-      text-align: center;
-      box-shadow: 0 0 10px rgba(0,0,0,0.8);
-      max-width: 400px;
+      background: #222;
+      padding: 24px;
+      border-radius: 10px;
       width: 90%;
+      max-width: 400px;
+      color: #fff;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.8);
     }
     .modal h3 {
-      margin-bottom: 16px;
       font-size: 24px;
-      color: #ccc;
+      margin-bottom: 12px;
+      letter-spacing: 1px;
     }
     .modal p {
       font-size: 18px;
       margin-bottom: 20px;
     }
-    .modal button {
-      background: linear-gradient(145deg, #444, #222);
-      border: none;
-      color: #fff;
-      padding: 12px 20px;
-      font-size: 18px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.3s;
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: space-evenly;
     }
-    .modal button:hover {
-      background: linear-gradient(145deg, #555, #333);
+    .modal .btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.3s;
+      box-shadow: none;
+      border: none;
+    }
+    .btn-confirm { background: #28a745; color: #fff; }
+    .btn-cancel { background: #e74c3c; color: #fff; }
+    .btn-confirm:hover { background: #1e7e34; }
+    .btn-cancel:hover { background: #c0392b; }
+    
+    /* 響應式 */
+    @media screen and (max-width: 640px) {
+      .container { padding: 30px; }
+      .logo { width: 120px; }
+      h1 { font-size: 28px; }
+      h2 { font-size: 16px; margin-bottom: 20px; }
+      input { font-size: 18px; }
+      .btn { font-size: 18px; padding: 14px; }
+      #response { font-size: 18px; }
+      .modal h3 { font-size: 22px; }
+      .modal p, .modal .btn { font-size: 16px; }
+    }
+    
+    /* 表格水平滾動 */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .table-responsive table {
+      min-width: 600px;
     }
   </style>
 </head>
@@ -263,13 +290,14 @@
     <div id="response" role="status" aria-live="polite"></div>
   </div>
   
-  <!-- 模態視窗：強制警告無痕模式 -->
   <div id="overlay" class="overlay">
     <div class="modal">
-      <h3 id="modal-title">系統提示</h3>
-      <p id="modal-message">本系統不支援無痕模式，請退出無痕模式後再點擊下方按鈕。</p>
-      <!-- 按鈕文字改為「我已退出無痕模式」 -->
-      <button id="incognitoReload">我已退出無痕模式</button>
+      <h3 id="modal-title">提示</h3>
+      <p id="modal-message">提示訊息</p>
+      <div class="modal-buttons">
+        <button id="modal-confirm" class="btn btn-confirm">確定</button>
+        <button id="modal-cancel" class="btn btn-cancel">取消</button>
+      </div>
     </div>
   </div>
 
@@ -287,7 +315,8 @@
     const responseDiv = document.getElementById("response");
     const overlay = document.getElementById("overlay");
     const modalMessage = document.getElementById("modal-message");
-    const incognitoReloadBtn = document.getElementById("incognitoReload");
+    const confirmBtn = document.getElementById("modal-confirm");
+    const cancelBtn = document.getElementById("modal-cancel");
 
     // 顯示/隱藏密碼按鈕
     toggleBtn.addEventListener("click", () => {
@@ -343,47 +372,47 @@
       });
     }
 
-    // ---------------------------
-    // 偵測無痕模式 (採用 localStorage、IndexedDB、RequestFileSystem 三種方式)
-    function detectIncognito() {
-      return new Promise((resolve) => {
-        try {
-          localStorage.setItem("test", "test");
-          localStorage.removeItem("test");
-        } catch (e) {
-          resolve(true);
-          return;
-        }
-        if (window.indexedDB) {
-          let dbTest = indexedDB.open("test");
-          dbTest.onerror = () => resolve(true);
-          dbTest.onsuccess = () => resolve(false);
-        } else {
-          const fs = window.RequestFileSystem || window.webkitRequestFileSystem;
-          if (!fs) {
-            resolve(false);
-          } else {
-            fs(window.TEMPORARY, 100, () => resolve(false), () => resolve(true));
-          }
-        }
-      });
+    function showCustomConfirm(message, onConfirm, onCancel) {
+      modalMessage.textContent = message;
+      overlay.classList.add("show");
+      confirmBtn.onclick = () => {
+        overlay.classList.remove("show");
+        if (onConfirm) onConfirm();
+      };
+      cancelBtn.onclick = () => {
+        overlay.classList.remove("show");
+        if (onCancel) onCancel();
+      };
     }
 
-    // ---------------------------
-    // 回傳無痕模式使用紀錄
-    function logIncognitoUsage(note) {
-      // 例如呼叫後端的 logIncognito 函式 (後端需自行實作)
-      callGAS("logIncognito", [note, navigator.userAgent])
-        .then(res => {
-          console.log("已記錄：", note, res);
-        })
-        .catch(err => {
-          console.error("記錄失敗", err);
+    // 加強無痕模式檢測
+    async function detectIncognito() {
+      try {
+        // 嘗試使用 localStorage
+        localStorage.setItem('test', 'test');
+        localStorage.removeItem('test');
+      } catch (e) {
+        return true; // localStorage 不可用，可能是無痕模式
+      }
+      // 嘗試使用 IndexedDB
+      if (window.indexedDB) {
+        const request = indexedDB.open('test');
+        return new Promise((resolve) => {
+          request.onerror = () => resolve(true); // IndexedDB 不可用
+          request.onsuccess = () => resolve(false);
         });
+      }
+      // 嘗試使用 RequestFileSystem
+      const fs = window.RequestFileSystem || window.webkitRequestFileSystem;
+      if (fs) {
+        return new Promise((resolve) => {
+          fs(window.TEMPORARY, 100, () => resolve(false), () => resolve(true));
+        });
+      }
+      return false;
     }
 
-    // ---------------------------
-    // 生成設備指紋產生 UUID（不再區分無痕模式）
+    // 生成設備指紋
     function generateDeviceFingerprint() {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
@@ -399,12 +428,13 @@
         navigator.userAgent,
         navigator.language,
         screen.width + "x" + screen.height,
-        canvasData.slice(-10)
+        canvasData.slice(-10), // 取部分 Canvas 資料，避免過長
       ].join("|");
 
-      return btoa(fingerprint);
+      return btoa(fingerprint); // Base64 編碼
     }
 
+    // 修改 getDeviceUUID，改用指紋
     function getDeviceUUID() {
       let uuid = localStorage.getItem("deviceUUID");
       if (!uuid) {
@@ -428,21 +458,24 @@
         return;
       }
 
+      // 加強無痕模式檢測
+      const isIncognito = await detectIncognito();
+      if (isIncognito) {
+        displayError("請勿使用無痕模式進行打卡，關閉後重試");
+        return;
+      }
+
       try {
         const result = await callGAS("checkDeviceBinding", [idCode]);
         if (result.status === "success") {
           startCountdown(action, force, false);
         } else if (result.status === "error") {
           if (result.error === "NOT_BOUND") {
-            // 進行設備綁定確認
-            overlay.classList.add("show");
-            modalMessage.textContent = "請確認同意綁定本裝置｜作為打卡唯一用途";
-            incognitoReloadBtn.textContent = "確定綁定";
-            incognitoReloadBtn.style.display = "block";
-            incognitoReloadBtn.onclick = () => {
-              overlay.classList.remove("show");
-              startCountdown(action, force, true);
-            };
+            showCustomConfirm(
+              "請確認同意綁定本裝置｜作為打卡唯一用途",
+              () => { startCountdown(action, force, true); },
+              () => { responseDiv.innerHTML = "<span style='color:orange;'>已取消打卡</span>"; }
+            );
           } else {
             displayError(result.message);
           }
@@ -466,13 +499,15 @@
         }
       }, 1000);
 
-      // 允許使用者取消倒數
-      incognitoReloadBtn.textContent = "取消";
-      incognitoReloadBtn.style.display = "block";
-      incognitoReloadBtn.onclick = () => {
+      cancelBtn.onclick = () => {
         clearInterval(timer);
         overlay.classList.remove("show");
         responseDiv.innerHTML = "<span style='color:orange;'>已取消打卡</span>";
+      };
+      confirmBtn.onclick = () => {
+        clearInterval(timer);
+        overlay.classList.remove("show");
+        handleAction(action, force, bindDevice);
       };
     }
 
@@ -593,46 +628,12 @@
     document.getElementById("btnQuery").addEventListener("click", () => { queryTodayRecords(); });
     document.getElementById("btnTest").addEventListener("click", () => { testLocation(); });
 
-    // ---------------------------
-    // 送出無痕模式使用紀錄（直接標記為 Incognito: true）
-    function sendIncognitoLog() {
-      const deviceInfo = JSON.stringify({
-        OS: navigator.platform,
-        Browser: navigator.userAgent,
-        Incognito: true  // 直接標記為 true
-      });
-      const uuid = getDeviceUUID();
-      callGAS("logIncognito", [deviceInfo, uuid])
-        .then(result => {
-          console.log("無痕模式使用記錄已回傳", result);
-        })
-        .catch(err => {
-          console.error("無痕模式記錄回傳錯誤:", err);
-        });
-    }
-
-    // ---------------------------
-    // 頁面載入時立即跳出無痕模式警告模態視窗，並送出 log
-    window.onload = () => {
-      overlay.classList.add("show");
-      modalMessage.textContent = "本系統不支援無痕模式，請退出無痕模式後再點擊下方按鈕。";
-      incognitoReloadBtn.textContent = "我已退出無痕模式";
-      incognitoReloadBtn.style.display = "block";
-      // 當使用者按下「我已退出無痕模式」後，再檢查是否仍在無痕模式
-      incognitoReloadBtn.onclick = async () => {
-        const stillIncognito = await detectIncognito();
-        if (stillIncognito) {
-          logIncognitoUsage("使用者聲稱退出，但仍在無痕模式");
-          alert("偵測到您仍在無痕模式，請重新開啟一般瀏覽模式。");
-        } else {
-          logIncognitoUsage("使用者已退出無痕模式");
-          overlay.classList.remove("show");
-          // 可選擇重新載入或直接進入系統
-          // location.reload();
-        }
-      };
-      // 送出無痕模式使用紀錄
-      sendIncognitoLog();
+    // 頁面載入時檢測無痕模式
+    window.onload = async () => {
+      const isIncognito = await detectIncognito();
+      if (isIncognito) {
+        alert("本系統不支援無痕模式，請使用一般模式以確保打卡功能正常運作。");
+      }
     };
   </script>
 </body>
