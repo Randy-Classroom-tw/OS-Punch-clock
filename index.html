@@ -251,14 +251,14 @@
       min-width: 600px;
     }
     
-    /* 新增：無痕模式提示遮罩 */
+    /* 新增：無痕模式提示遮罩 (固定顯示) */
     #incognitoPrompt {
       position: fixed;
       top: 0; left: 0;
       width: 100%;
       height: 100%;
       background: rgba(0,0,0,0.85);
-      display: none;
+      display: flex;
       justify-content: center;
       align-items: center;
       z-index: 10000;
@@ -343,7 +343,7 @@
     </div>
   </div>
   
-  <!-- 新增：獨立無痕模式提示遮罩 -->
+  <!-- 固定顯示的無痕模式提示遮罩 -->
   <div id="incognitoPrompt">
     <div class="prompt-content">
       <h2>系統提示</h2>
@@ -369,7 +369,7 @@
     const confirmBtn = document.getElementById("modal-confirm");
     const cancelBtn = document.getElementById("modal-cancel");
 
-    // 新增：無痕模式提示遮罩相關
+    // 無痕模式提示遮罩 (直接顯示，不做偵測)
     const incognitoPrompt = document.getElementById("incognitoPrompt");
     const confirmIncognito = document.getElementById("confirmIncognito");
     confirmIncognito.addEventListener("click", () => {
@@ -443,30 +443,8 @@
       };
     }
 
-    // 加強無痕模式檢測
+    // 保留偵測函式但不使用
     async function detectIncognito() {
-      try {
-        // 嘗試使用 localStorage
-        localStorage.setItem('test', 'test');
-        localStorage.removeItem('test');
-      } catch (e) {
-        return true; // localStorage 不可用，可能是無痕模式
-      }
-      // 嘗試使用 IndexedDB
-      if (window.indexedDB) {
-        const request = indexedDB.open('test');
-        return new Promise((resolve) => {
-          request.onerror = () => resolve(true); // IndexedDB 不可用
-          request.onsuccess = () => resolve(false);
-        });
-      }
-      // 嘗試使用 RequestFileSystem
-      const fs = window.RequestFileSystem || window.webkitRequestFileSystem;
-      if (fs) {
-        return new Promise((resolve) => {
-          fs(window.TEMPORARY, 100, () => resolve(false), () => resolve(true));
-        });
-      }
       return false;
     }
 
@@ -481,18 +459,15 @@
       ctx.fillStyle = "#069";
       ctx.fillText("Fingerprint Test", 2, 15);
       const canvasData = canvas.toDataURL();
-
       const fingerprint = [
         navigator.userAgent,
         navigator.language,
         screen.width + "x" + screen.height,
         canvasData.slice(-10),
       ].join("|");
-
       return btoa(fingerprint);
     }
 
-    // 修改 getDeviceUUID，改用指紋
     function getDeviceUUID() {
       let uuid = localStorage.getItem("deviceUUID");
       if (!uuid) {
@@ -516,13 +491,7 @@
         return;
       }
 
-      // 加強無痕模式檢測
-      const isIncognito = await detectIncognito();
-      if (isIncognito) {
-        displayError("請勿使用無痕模式進行打卡，關閉後重試");
-        return;
-      }
-
+      // 直接進行打卡，不再偵測無痕模式
       try {
         const result = await callGAS("checkDeviceBinding", [idCode]);
         if (result.status === "success") {
@@ -686,12 +655,9 @@
     document.getElementById("btnQuery").addEventListener("click", () => { queryTodayRecords(); });
     document.getElementById("btnTest").addEventListener("click", () => { testLocation(); });
 
-    // 頁面載入時檢測無痕模式，改用全屏提示而非 alert
-    window.onload = async () => {
-      const isIncognito = await detectIncognito();
-      if (isIncognito) {
-        incognitoPrompt.style.display = "flex";
-      }
+    // 頁面載入時直接跳出無痕模式提示窗
+    window.onload = () => {
+      incognitoPrompt.style.display = "flex";
     };
   </script>
 </body>
