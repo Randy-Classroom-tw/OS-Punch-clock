@@ -9,17 +9,7 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap">
   <style>
-    /* 針對各瀏覽器的內建顯示密碼圖示調整 */
-    input::-ms-reveal,
-    input::-ms-clear {
-      display: none !important;
-    }
-    input[type=password]::-webkit-textfield-decoration-container {
-      visibility: hidden !important;
-      pointer-events: none !important;
-    }
-
-    /* 重設與字型 */
+    /* 基本重設與字型 */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     body {
@@ -32,8 +22,7 @@
       justify-content: center;
       padding: 20px;
     }
-    
-    /* 主要容器：對稱、立體科技感 */
+    /* 主要容器 */
     .container {
       background: rgba(20, 20, 20, 0.95);
       border: 2px solid #333;
@@ -44,15 +33,12 @@
       width: 100%;
       text-align: center;
     }
-    
-    /* Logo 置中，加入輕微立體感 */
+    /* Logo 及標題 */
     .logo {
       width: 150px;
       margin: 0 auto 20px;
       filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.6));
     }
-    
-    /* 標題風格：大膽、對稱、科技感 */
     h1 {
       font-size: 36px;
       font-weight: bold;
@@ -67,8 +53,7 @@
       color: #bbb;
       margin-bottom: 30px;
     }
-    
-    /* 表單區塊 */
+    /* 表單 */
     form {
       background: rgba(40,40,40,0.8);
       border: 1px solid #333;
@@ -118,7 +103,6 @@
       transition: color 0.3s;
     }
     .toggle-btn:hover { color: #fff; }
-    
     /* 按鈕群組 */
     .btn-group {
       display: flex;
@@ -144,7 +128,6 @@
     .btn-off { background: linear-gradient(145deg, #e74c3c, #c0392b); color: #fff; }
     .btn-query { background: linear-gradient(145deg, #3498db, #2980b9); color: #fff; }
     .btn-test { background: linear-gradient(145deg, #f39c12, #e67e22); color: #fff; }
-    
     /* 回應訊息 */
     #response {
       margin-top: 10px;
@@ -175,7 +158,6 @@
       50% { opacity: 0.4; }
       100% { opacity: 1; }
     }
-    
     /* Modal 視窗 */
     .overlay {
       position: fixed;
@@ -227,7 +209,6 @@
     .btn-cancel { background: #e74c3c; color: #fff; }
     .btn-confirm:hover { background: #1e7e34; }
     .btn-cancel:hover { background: #c0392b; }
-    
     /* 響應式 */
     @media screen and (max-width: 640px) {
       .container { padding: 30px; }
@@ -240,7 +221,6 @@
       .modal h3 { font-size: 22px; }
       .modal p, .modal .btn { font-size: 16px; }
     }
-    
     /* 表格水平滾動 */
     .table-responsive {
       width: 100%;
@@ -249,6 +229,44 @@
     }
     .table-responsive table {
       min-width: 600px;
+    }
+    /* 無痕模式提醒 Modal (獨立按鈕) */
+    .incognito-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+    }
+    .incognito-content {
+      background: #222;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      color: #fff;
+      font-size: 18px;
+      max-width: 400px;
+      width: 90%;
+    }
+    .incognito-content p {
+      margin-bottom: 20px;
+    }
+    .incognito-content button {
+      padding: 10px 20px;
+      background: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 18px;
+    }
+    .incognito-content button:hover {
+      background: #1e7e34;
     }
   </style>
 </head>
@@ -266,7 +284,7 @@
           id="idCode" 
           name="idCode" 
           required 
-          pattern="\d{4}" 
+          pattern="\\d{4}" 
           maxlength="4" 
           inputmode="numeric"
           autocomplete="off" 
@@ -290,6 +308,15 @@
     <div id="response" role="status" aria-live="polite"></div>
   </div>
   
+  <!-- 無痕模式提醒 Modal -->
+  <div id="incognitoModal" class="incognito-modal">
+    <div class="incognito-content">
+      <p>本系統無法在無痕視窗下執行，請確保退出無痕模式後再打卡。</p>
+      <button id="exitIncognitoBtn">我已退出無痕瀏覽器</button>
+    </div>
+  </div>
+  
+  <!-- 共用 Modal (例如打卡倒數) -->
   <div id="overlay" class="overlay">
     <div class="modal">
       <h3 id="modal-title">提示</h3>
@@ -300,15 +327,15 @@
       </div>
     </div>
   </div>
-
+  
   <script>
     // 請換成您重新部署的 exec 網址
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwDG3H75wlZsvt80Gu0-0WsaX6Igh4hBWEZENOfhsFATmys0--P_rSn_J1zaP2oehogIg/exec";
-
+    
     let lastTestLocationTime = 0;
     let lastQueryTime = 0;
     const COOLDOWN_MS = 10000;
-
+    
     const toggleBtn = document.getElementById("toggleBtn");
     const idInput = document.getElementById("idCode");
     const eyeIcon = document.getElementById("eyeIcon");
@@ -317,7 +344,7 @@
     const modalMessage = document.getElementById("modal-message");
     const confirmBtn = document.getElementById("modal-confirm");
     const cancelBtn = document.getElementById("modal-cancel");
-
+    
     // 顯示/隱藏密碼按鈕
     toggleBtn.addEventListener("click", () => {
       if (idInput.type === "password") {
@@ -328,8 +355,8 @@
         eyeIcon.textContent = "visibility";
       }
     });
-
-    // 僅允許輸入數字 + 維持 4 位數檢查
+    
+    // 僅允許輸入數字並檢查 4 位數
     idInput.addEventListener("input", () => {
       if (idInput.value && !/^\d*$/.test(idInput.value)) {
         alert("請切換輸入法｜輸入正規四碼數字");
@@ -344,11 +371,11 @@
         idInput.setCustomValidity("");
       }
     });
-
+    
     function displayError(msg) {
       responseDiv.innerHTML = `<div style="color:red; text-align:center;">${msg}</div>`;
     }
-
+    
     function callGAS(functionName, parametersArray) {
       const formData = new URLSearchParams();
       formData.append("function", functionName);
@@ -371,7 +398,7 @@
         throw new Error(`Fetch error: ${err}`);
       });
     }
-
+    
     function showCustomConfirm(message, onConfirm, onCancel) {
       modalMessage.textContent = message;
       overlay.classList.add("show");
@@ -384,25 +411,22 @@
         if (onCancel) onCancel();
       };
     }
-
-    // 加強無痕模式檢測
+    
+    // 無痕模式檢測
     async function detectIncognito() {
       try {
-        // 嘗試使用 localStorage
         localStorage.setItem('test', 'test');
         localStorage.removeItem('test');
       } catch (e) {
-        return true; // localStorage 不可用，可能是無痕模式
+        return true;
       }
-      // 嘗試使用 IndexedDB
       if (window.indexedDB) {
         const request = indexedDB.open('test');
         return new Promise((resolve) => {
-          request.onerror = () => resolve(true); // IndexedDB 不可用
+          request.onerror = () => resolve(true);
           request.onsuccess = () => resolve(false);
         });
       }
-      // 嘗試使用 RequestFileSystem
       const fs = window.RequestFileSystem || window.webkitRequestFileSystem;
       if (fs) {
         return new Promise((resolve) => {
@@ -411,7 +435,7 @@
       }
       return false;
     }
-
+    
     // 生成設備指紋
     function generateDeviceFingerprint() {
       const canvas = document.createElement("canvas");
@@ -423,18 +447,18 @@
       ctx.fillStyle = "#069";
       ctx.fillText("Fingerprint Test", 2, 15);
       const canvasData = canvas.toDataURL();
-
+    
       const fingerprint = [
         navigator.userAgent,
         navigator.language,
         screen.width + "x" + screen.height,
-        canvasData.slice(-10), // 取部分 Canvas 資料，避免過長
+        canvasData.slice(-10)
       ].join("|");
-
-      return btoa(fingerprint); // Base64 編碼
+    
+      return btoa(fingerprint);
     }
-
-    // 修改 getDeviceUUID，改用指紋
+    
+    // 取得或生成設備 UUID
     function getDeviceUUID() {
       let uuid = localStorage.getItem("deviceUUID");
       if (!uuid) {
@@ -443,12 +467,12 @@
       }
       return uuid;
     }
-
+    
     async function startClockAction(action, force) {
       const idCode = idInput.value;
       responseDiv.innerHTML = "<span class='loading'>檢查中｜請稍候...</span>";
       responseDiv.classList.add("show");
-
+    
       if (!/^\d{4}$/.test(idCode)) {
         displayError("請先輸入完整的身分證後四碼");
         return;
@@ -457,14 +481,14 @@
         displayError("請確認網路連線");
         return;
       }
-
-      // 加強無痕模式檢測
+    
+      // 檢查無痕模式
       const isIncognito = await detectIncognito();
       if (isIncognito) {
         displayError("請勿使用無痕模式進行打卡，關閉後重試");
         return;
       }
-
+    
       try {
         const result = await callGAS("checkDeviceBinding", [idCode]);
         if (result.status === "success") {
@@ -484,7 +508,7 @@
         displayError(`網路檢查失敗: ${err}`);
       }
     }
-
+    
     function startCountdown(action, force, bindDevice) {
       overlay.classList.add("show");
       let countdown = 5;
@@ -498,7 +522,7 @@
           handleAction(action, force, bindDevice);
         }
       }, 1000);
-
+    
       cancelBtn.onclick = () => {
         clearInterval(timer);
         overlay.classList.remove("show");
@@ -510,7 +534,7 @@
         handleAction(action, force, bindDevice);
       };
     }
-
+    
     async function handleAction(action, force, bindDevice) {
       const idCode = idInput.value;
       responseDiv.innerHTML = "<span class='loading'>審核中｜請稍候...</span>";
@@ -540,7 +564,7 @@
         displayError(`連線失敗，請檢查網路: ${err}`);
       }
     }
-
+    
     function getLocation(successCallback, errorCallback) {
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
@@ -556,7 +580,7 @@
         errorCallback("此瀏覽器不支援 Geolocation API");
       }
     }
-
+    
     async function testLocation() {
       const now = Date.now();
       if (now - lastTestLocationTime < COOLDOWN_MS) {
@@ -564,7 +588,7 @@
         return;
       }
       lastTestLocationTime = now;
-
+    
       const idCode = idInput.value;
       responseDiv.innerHTML = "<span class='loading'>定位測試中｜請稍候...</span>";
       responseDiv.classList.add("show");
@@ -590,7 +614,7 @@
         displayError(`測試定位失敗: ${err}`);
       }
     }
-
+    
     async function queryTodayRecords() {
       const now = Date.now();
       if (now - lastQueryTime < COOLDOWN_MS) {
@@ -598,7 +622,7 @@
         return;
       }
       lastQueryTime = now;
-
+    
       const idCode = idInput.value;
       responseDiv.innerHTML = "<span class='loading'>查詢中｜請稍候...</span>";
       responseDiv.classList.add("show");
@@ -622,19 +646,24 @@
         displayError(`查詢失敗: ${err}`);
       }
     }
-
+    
     document.getElementById("btnOn").addEventListener("click", () => { startClockAction("上班", false); });
     document.getElementById("btnOff").addEventListener("click", () => { startClockAction("下班", false); });
     document.getElementById("btnQuery").addEventListener("click", () => { queryTodayRecords(); });
     document.getElementById("btnTest").addEventListener("click", () => { testLocation(); });
-
-    // 頁面載入時檢測無痕模式
-    window.onload = async () => {
+    
+    // 頁面載入時檢查是否處於無痕模式，若是則顯示提醒 Modal
+    window.addEventListener("load", async () => {
       const isIncognito = await detectIncognito();
       if (isIncognito) {
-        alert("本系統不支援無痕模式，請使用一般模式以確保打卡功能正常運作。");
+        document.getElementById("incognitoModal").style.display = "flex";
       }
-    };
+    });
+    
+    // 無痕模式提醒按鈕動作
+    document.getElementById("exitIncognitoBtn").addEventListener("click", () => {
+      document.getElementById("incognitoModal").style.display = "none";
+    });
   </script>
 </body>
 </html>
