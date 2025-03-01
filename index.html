@@ -385,16 +385,31 @@
       };
     }
 
-    // 檢測無痕模式
-    function detectIncognito() {
-      return new Promise((resolve) => {
-        const fs = window.RequestFileSystem || window.webkitRequestFileSystem;
-        if (!fs) {
-          resolve(false);
-          return;
-        }
-        fs(window.TEMPORARY, 100, () => resolve(false), () => resolve(true));
-      });
+    // 加強無痕模式檢測
+    async function detectIncognito() {
+      try {
+        // 嘗試使用 localStorage
+        localStorage.setItem('test', 'test');
+        localStorage.removeItem('test');
+      } catch (e) {
+        return true; // localStorage 不可用，可能是無痕模式
+      }
+      // 嘗試使用 IndexedDB
+      if (window.indexedDB) {
+        const request = indexedDB.open('test');
+        return new Promise((resolve) => {
+          request.onerror = () => resolve(true); // IndexedDB 不可用
+          request.onsuccess = () => resolve(false);
+        });
+      }
+      // 嘗試使用 RequestFileSystem
+      const fs = window.RequestFileSystem || window.webkitRequestFileSystem;
+      if (fs) {
+        return new Promise((resolve) => {
+          fs(window.TEMPORARY, 100, () => resolve(false), () => resolve(true));
+        });
+      }
+      return false;
     }
 
     // 生成設備指紋
@@ -443,7 +458,7 @@
         return;
       }
 
-      // 檢測無痕模式
+      // 加強無痕模式檢測
       const isIncognito = await detectIncognito();
       if (isIncognito) {
         displayError("請勿使用無痕模式進行打卡，關閉後重試");
