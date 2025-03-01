@@ -7,6 +7,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="https://i.imgur.com/7obx0vd.jpg">
   <link rel="apple-touch-icon" href="https://i.imgur.com/7obx0vd.jpg">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <!-- 等寬字體 Roboto Mono -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap">
   <style>
     /* 針對各瀏覽器的內建顯示密碼圖示調整 */
@@ -24,7 +25,7 @@
     html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     body {
       background: linear-gradient(145deg, #0a0a0a, #1a1a1a);
-      font-family: 'Roboto Mono', monospace;
+      font-family: 'Roboto Mono', monospace; /* 全站皆使用等寬字體 */
       color: #e0e0e0;
       min-height: 100vh;
       display: flex;
@@ -222,6 +223,7 @@
       transition: background 0.3s, transform 0.3s;
       box-shadow: none;
       border: none;
+      font-family: 'Roboto Mono', monospace;
     }
     .btn-confirm { background: #28a745; color: #fff; }
     .btn-cancel { background: #e74c3c; color: #fff; }
@@ -262,6 +264,7 @@
       justify-content: center;
       align-items: center;
       z-index: 10000;
+      font-family: 'Roboto Mono', monospace;
     }
     #incognitoPrompt .prompt-content {
       background: #222;
@@ -269,36 +272,49 @@
       border-radius: 10px;
       padding: 20px 30px;
       text-align: center;
+      max-width: 450px;
+      width: 90%;
     }
     #incognitoPrompt .prompt-content h2 {
       margin-bottom: 20px;
       color: #fff;
+      font-size: 24px;
     }
     #incognitoPrompt .prompt-content p {
       margin-bottom: 20px;
       font-size: 18px;
       color: #ddd;
     }
-    #incognitoPrompt .prompt-content button {
-      padding: 10px 20px;
+    /* 按鈕群組：等寬、對齊 */
+    #incognitoPrompt .prompt-content .button-group {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+    #incognitoPrompt .prompt-content .button-group button {
+      font-family: 'Roboto Mono', monospace;
+      flex: 1;
+      min-width: 120px;
+      text-align: center;
+      padding: 12px 20px;
       font-size: 16px;
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      margin: 0 5px;
+      transition: background 0.3s;
     }
-    #incognitoPrompt .prompt-content button#confirmIncognito {
+    #confirmIncognito {
       background-color: #28a745;
       color: #fff;
     }
-    #incognitoPrompt .prompt-content button#confirmIncognito:hover {
+    #confirmIncognito:hover {
       background-color: #1e7e34;
     }
-    #incognitoPrompt .prompt-content button#cancelIncognito {
+    #cancelIncognito {
       background-color: #e74c3c;
       color: #fff;
     }
-    #incognitoPrompt .prompt-content button#cancelIncognito:hover {
+    #cancelIncognito:hover {
       background-color: #c0392b;
     }
   </style>
@@ -357,9 +373,11 @@
   <div id="incognitoPrompt">
     <div class="prompt-content">
       <h2>系統提示</h2>
-      <p>本系統在無痕模式下執行，請確保關閉無痕瀏覽視窗</p>
-      <button id="confirmIncognito">我已確認關閉</button>
-      <button id="cancelIncognito">取消</button>
+      <p>本系統拒絕在無痕模式內執行｜請確保關閉無痕瀏覽視窗</p>
+      <div class="button-group">
+        <button id="confirmIncognito">我已確認關閉</button>
+        <button id="cancelIncognito">取消</button>
+      </div>
     </div>
   </div>
   
