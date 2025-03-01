@@ -267,8 +267,9 @@
   <div id="overlay" class="overlay">
     <div class="modal">
       <h3 id="modal-title">系統提示</h3>
-      <p id="modal-message">本系統不支援無痕模式，請退出無痕模式後重新載入頁面。</p>
-      <button id="incognitoReload">重新載入</button>
+      <p id="modal-message">本系統不支援無痕模式，請退出無痕模式後再點擊下方按鈕。</p>
+      <!-- 按鈕文字改為「我已退出無痕模式」 -->
+      <button id="incognitoReload">我已退出無痕模式</button>
     </div>
   </div>
 
@@ -342,16 +343,47 @@
       });
     }
 
-    function showCustomConfirm(message, onConfirm, onCancel) {
-      // 此函式用於其他彈窗，與無痕警告模態分開處理
-      modalMessage.textContent = message;
-      overlay.classList.add("show");
-      // 顯示兩個按鈕時（非無痕模式警告）
-      incognitoReloadBtn.style.display = "none";
-      // 這裡可根據需求設定 confirm/cancel 事件
+    // ---------------------------
+    // 偵測無痕模式 (採用 localStorage、IndexedDB、RequestFileSystem 三種方式)
+    function detectIncognito() {
+      return new Promise((resolve) => {
+        try {
+          localStorage.setItem("test", "test");
+          localStorage.removeItem("test");
+        } catch (e) {
+          resolve(true);
+          return;
+        }
+        if (window.indexedDB) {
+          let dbTest = indexedDB.open("test");
+          dbTest.onerror = () => resolve(true);
+          dbTest.onsuccess = () => resolve(false);
+        } else {
+          const fs = window.RequestFileSystem || window.webkitRequestFileSystem;
+          if (!fs) {
+            resolve(false);
+          } else {
+            fs(window.TEMPORARY, 100, () => resolve(false), () => resolve(true));
+          }
+        }
+      });
     }
 
-    // 改用設備指紋產生 UUID（不再區分無痕模式）
+    // ---------------------------
+    // 回傳無痕模式使用紀錄
+    function logIncognitoUsage(note) {
+      // 例如呼叫後端的 logIncognito 函式 (後端需自行實作)
+      callGAS("logIncognito", [note, navigator.userAgent])
+        .then(res => {
+          console.log("已記錄：", note, res);
+        })
+        .catch(err => {
+          console.error("記錄失敗", err);
+        });
+    }
+
+    // ---------------------------
+    // 生成設備指紋產生 UUID（不再區分無痕模式）
     function generateDeviceFingerprint() {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
@@ -434,7 +466,7 @@
         }
       }, 1000);
 
-      // 使用者可選擇取消倒數
+      // 允許使用者取消倒數
       incognitoReloadBtn.textContent = "取消";
       incognitoReloadBtn.style.display = "block";
       incognitoReloadBtn.onclick = () => {
@@ -562,7 +594,7 @@
     document.getElementById("btnTest").addEventListener("click", () => { testLocation(); });
 
     // ---------------------------
-    // 新增：送出無痕模式使用紀錄（不做實際偵測，直接認定使用者進入時為無痕模式）
+    // 送出無痕模式使用紀錄（直接標記為 Incognito: true）
     function sendIncognitoLog() {
       const deviceInfo = JSON.stringify({
         OS: navigator.platform,
@@ -570,7 +602,6 @@
         Incognito: true  // 直接標記為 true
       });
       const uuid = getDeviceUUID();
-      // 呼叫後端的 "logIncognito" 函式記錄無痕模式使用狀況（後端需自行實作該函式）
       callGAS("logIncognito", [deviceInfo, uuid])
         .then(result => {
           console.log("無痕模式使用記錄已回傳", result);
@@ -581,15 +612,24 @@
     }
 
     // ---------------------------
-    // 頁面載入時立即跳出無痕模式警告模態視窗，強制使用者退出無痕模式
+    // 頁面載入時立即跳出無痕模式警告模態視窗，並送出 log
     window.onload = () => {
-      // 直接顯示模態視窗，不做檢測
       overlay.classList.add("show");
-      modalMessage.textContent = "本系統不支援無痕模式，請退出無痕模式後重新載入頁面。";
-      incognitoReloadBtn.textContent = "重新載入";
+      modalMessage.textContent = "本系統不支援無痕模式，請退出無痕模式後再點擊下方按鈕。";
+      incognitoReloadBtn.textContent = "我已退出無痕模式";
       incognitoReloadBtn.style.display = "block";
-      incognitoReloadBtn.onclick = () => {
-        location.reload();
+      // 當使用者按下「我已退出無痕模式」後，再檢查是否仍在無痕模式
+      incognitoReloadBtn.onclick = async () => {
+        const stillIncognito = await detectIncognito();
+        if (stillIncognito) {
+          logIncognitoUsage("使用者聲稱退出，但仍在無痕模式");
+          alert("偵測到您仍在無痕模式，請重新開啟一般瀏覽模式。");
+        } else {
+          logIncognitoUsage("使用者已退出無痕模式");
+          overlay.classList.remove("show");
+          // 可選擇重新載入或直接進入系統
+          // location.reload();
+        }
       };
       // 送出無痕模式使用紀錄
       sendIncognitoLog();
