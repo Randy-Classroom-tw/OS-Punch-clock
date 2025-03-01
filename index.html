@@ -25,13 +25,16 @@
     html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     body {
       background: linear-gradient(145deg, #0a0a0a, #1a1a1a);
-      font-family: 'Roboto Mono', monospace; /* 全站皆使用等寬字體 */
+      font-family: 'Roboto Mono', monospace;
       color: #e0e0e0;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 20px;
+      /* 新增：全域粗體+立體陰影 */
+      font-weight: 700;
+      text-shadow: 1px 1px 2px #000;
     }
     
     /* 主要容器：對稱、立體科技感 */
@@ -53,15 +56,13 @@
       filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.6));
     }
     
-    /* 標題風格：大膽、對稱、科技感 */
+    /* 標題風格：大膽、對稱、科技感 (移除原本 text-shadow 避免疊加) */
     h1 {
       font-size: 36px;
-      font-weight: bold;
       letter-spacing: 2px;
       text-transform: uppercase;
       color: #fff;
       margin-bottom: 10px;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
     }
     h2 {
       font-size: 20px;
@@ -132,26 +133,32 @@
       flex: 1 1 150px;
       padding: 14px;
       font-size: 20px;
-      font-weight: bold;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.3s ease;
       box-shadow: 0 4px 8px rgba(0,0,0,0.6), inset 0 -2px 0 rgba(0,0,0,0.2);
+      color: #fff;
     }
     .btn:hover { transform: translateY(-3px); }
     .btn:active { transform: translateY(0); }
-    .btn-on { background: linear-gradient(145deg, #28a745, #1e7e34); color: #fff; }
-    .btn-off { background: linear-gradient(145deg, #e74c3c, #c0392b); color: #fff; }
-    .btn-query { background: linear-gradient(145deg, #3498db, #2980b9); color: #fff; }
-    .btn-test { background: linear-gradient(145deg, #f39c12, #e67e22); color: #fff; }
+    .btn-on {
+      background: linear-gradient(145deg, #28a745, #1e7e34);
+    }
+    .btn-off {
+      background: linear-gradient(145deg, #e74c3c, #c0392b);
+    }
+    .btn-query {
+      background: linear-gradient(145deg, #3498db, #2980b9);
+    }
+    .btn-test {
+      background: linear-gradient(145deg, #f39c12, #e67e22);
+    }
     
     /* 回應訊息 */
     #response {
       margin-top: 10px;
       font-size: 20px;
-      font-weight: bold;
-      color: #76ff03;
       background: rgba(0,0,0,0.4);
       border-radius: 6px;
       padding: 10px;
@@ -160,6 +167,7 @@
       opacity: 0;
       transform: translateY(-10px);
       transition: opacity 0.5s ease, transform 0.5s ease;
+      color: #76ff03; /* 綠色文字 */
     }
     #response.show {
       opacity: 1;
@@ -168,7 +176,6 @@
     .loading {
       font-size: 20px;
       color: #ff4444;
-      font-weight: bold;
       animation: blink 1s infinite;
     }
     @keyframes blink {
@@ -203,6 +210,7 @@
       font-size: 24px;
       margin-bottom: 12px;
       letter-spacing: 1px;
+      /* 移除舊的 text-shadow 避免疊加 */
     }
     .modal p {
       font-size: 18px;
@@ -218,12 +226,11 @@
       padding: 10px;
       border-radius: 6px;
       font-size: 20px;
-      font-weight: bold;
+      font-family: 'Roboto Mono', monospace;
       cursor: pointer;
       transition: background 0.3s, transform 0.3s;
       box-shadow: none;
       border: none;
-      font-family: 'Roboto Mono', monospace;
     }
     .btn-confirm { background: #28a745; color: #fff; }
     .btn-cancel { background: #e74c3c; color: #fff; }
@@ -253,7 +260,7 @@
       min-width: 600px;
     }
     
-    /* 新增：無痕模式提示遮罩 (固定顯示) */
+    /* 固定顯示的無痕模式提示遮罩 */
     #incognitoPrompt {
       position: fixed;
       top: 0; left: 0;
@@ -264,7 +271,6 @@
       justify-content: center;
       align-items: center;
       z-index: 10000;
-      font-family: 'Roboto Mono', monospace;
     }
     #incognitoPrompt .prompt-content {
       background: #222;
@@ -279,6 +285,7 @@
       margin-bottom: 20px;
       color: #fff;
       font-size: 24px;
+      /* 全域已有陰影，故不再額外加 */
     }
     #incognitoPrompt .prompt-content p {
       margin-bottom: 20px;
@@ -480,11 +487,6 @@
       };
     }
 
-    // 保留偵測函式但不使用
-    async function detectIncognito() {
-      return false;
-    }
-
     // 生成設備指紋
     function generateDeviceFingerprint() {
       const canvas = document.createElement("canvas");
@@ -528,7 +530,7 @@
         return;
       }
 
-      // 直接進行打卡，不再偵測無痕模式
+      // 不偵測無痕模式，直接檢查裝置綁定
       try {
         const result = await callGAS("checkDeviceBinding", [idCode]);
         if (result.status === "success") {
