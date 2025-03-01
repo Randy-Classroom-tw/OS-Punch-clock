@@ -250,6 +250,47 @@
     .table-responsive table {
       min-width: 600px;
     }
+    
+    /* 新增：無痕模式提示遮罩 */
+    #incognitoPrompt {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+    #incognitoPrompt .prompt-content {
+      background: #222;
+      border: 2px solid #444;
+      border-radius: 10px;
+      padding: 20px 30px;
+      text-align: center;
+    }
+    #incognitoPrompt .prompt-content h2 {
+      margin-bottom: 20px;
+      color: #fff;
+    }
+    #incognitoPrompt .prompt-content p {
+      margin-bottom: 20px;
+      font-size: 18px;
+      color: #ddd;
+    }
+    #incognitoPrompt .prompt-content button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background-color: #28a745;
+      color: #fff;
+      cursor: pointer;
+    }
+    #incognitoPrompt .prompt-content button:hover {
+      background-color: #1e7e34;
+    }
   </style>
 </head>
 <body>
@@ -290,6 +331,7 @@
     <div id="response" role="status" aria-live="polite"></div>
   </div>
   
+  <!-- 原有 Modal -->
   <div id="overlay" class="overlay">
     <div class="modal">
       <h3 id="modal-title">提示</h3>
@@ -300,7 +342,16 @@
       </div>
     </div>
   </div>
-
+  
+  <!-- 新增：獨立無痕模式提示遮罩 -->
+  <div id="incognitoPrompt">
+    <div class="prompt-content">
+      <h2>系統提示</h2>
+      <p>本系統在無痕模式下執行，請確保關閉無痕瀏覽視窗</p>
+      <button id="confirmIncognito">我已確認關閉</button>
+    </div>
+  </div>
+  
   <script>
     // 請換成您重新部署的 exec 網址
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwDG3H75wlZsvt80Gu0-0WsaX6Igh4hBWEZENOfhsFATmys0--P_rSn_J1zaP2oehogIg/exec";
@@ -317,6 +368,13 @@
     const modalMessage = document.getElementById("modal-message");
     const confirmBtn = document.getElementById("modal-confirm");
     const cancelBtn = document.getElementById("modal-cancel");
+
+    // 新增：無痕模式提示遮罩相關
+    const incognitoPrompt = document.getElementById("incognitoPrompt");
+    const confirmIncognito = document.getElementById("confirmIncognito");
+    confirmIncognito.addEventListener("click", () => {
+      incognitoPrompt.style.display = "none";
+    });
 
     // 顯示/隱藏密碼按鈕
     toggleBtn.addEventListener("click", () => {
@@ -349,4 +407,292 @@
       responseDiv.innerHTML = `<div style="color:red; text-align:center;">${msg}</div>`;
     }
 
-    function callGAS(functionN
+    function callGAS(functionName, parametersArray) {
+      const formData = new URLSearchParams();
+      formData.append("function", functionName);
+      formData.append("parameters", JSON.stringify(parametersArray));
+      return fetch(WEB_APP_URL, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: formData
+      })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`網路狀態異常, status=${res.status}, message=${res.statusText}`);
+        }
+        return res.json();
+      })
+      .catch(err => {
+        throw new Error(`Fetch error: ${err}`);
+      });
+    }
+
+    function showCustomConfirm(message, onConfirm, onCancel) {
+      modalMessage.textContent = message;
+      overlay.classList.add("show");
+      confirmBtn.onclick = () => {
+        overlay.classList.remove("show");
+        if (onConfirm) onConfirm();
+      };
+      cancelBtn.onclick = () => {
+        overlay.classList.remove("show");
+        if (onCancel) onCancel();
+      };
+    }
+
+    // 加強無痕模式檢測
+    async function detectIncognito() {
+      try {
+        // 嘗試使用 localStorage
+        localStorage.setItem('test', 'test');
+        localStorage.removeItem('test');
+      } catch (e) {
+        return true; // localStorage 不可用，可能是無痕模式
+      }
+      // 嘗試使用 IndexedDB
+      if (window.indexedDB) {
+        const request = indexedDB.open('test');
+        return new Promise((resolve) => {
+          request.onerror = () => resolve(true); // IndexedDB 不可用
+          request.onsuccess = () => resolve(false);
+        });
+      }
+      // 嘗試使用 RequestFileSystem
+      const fs = window.RequestFileSystem || window.webkitRequestFileSystem;
+      if (fs) {
+        return new Promise((resolve) => {
+          fs(window.TEMPORARY, 100, () => resolve(false), () => resolve(true));
+        });
+      }
+      return false;
+    }
+
+    // 生成設備指紋
+    function generateDeviceFingerprint() {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      ctx.textBaseline = "top";
+      ctx.font = "14px 'Arial'";
+      ctx.fillStyle = "#f60";
+      ctx.fillRect(125, 1, 62, 20);
+      ctx.fillStyle = "#069";
+      ctx.fillText("Fingerprint Test", 2, 15);
+      const canvasData = canvas.toDataURL();
+
+      const fingerprint = [
+        navigator.userAgent,
+        navigator.language,
+        screen.width + "x" + screen.height,
+        canvasData.slice(-10),
+      ].join("|");
+
+      return btoa(fingerprint);
+    }
+
+    // 修改 getDeviceUUID，改用指紋
+    function getDeviceUUID() {
+      let uuid = localStorage.getItem("deviceUUID");
+      if (!uuid) {
+        uuid = generateDeviceFingerprint();
+        localStorage.setItem("deviceUUID", uuid);
+      }
+      return uuid;
+    }
+
+    async function startClockAction(action, force) {
+      const idCode = idInput.value;
+      responseDiv.innerHTML = "<span class='loading'>檢查中｜請稍候...</span>";
+      responseDiv.classList.add("show");
+
+      if (!/^\d{4}$/.test(idCode)) {
+        displayError("請先輸入完整的身分證後四碼");
+        return;
+      }
+      if (!navigator.onLine) {
+        displayError("請確認網路連線");
+        return;
+      }
+
+      // 加強無痕模式檢測
+      const isIncognito = await detectIncognito();
+      if (isIncognito) {
+        displayError("請勿使用無痕模式進行打卡，關閉後重試");
+        return;
+      }
+
+      try {
+        const result = await callGAS("checkDeviceBinding", [idCode]);
+        if (result.status === "success") {
+          startCountdown(action, force, false);
+        } else if (result.status === "error") {
+          if (result.error === "NOT_BOUND") {
+            showCustomConfirm(
+              "請確認同意綁定本裝置｜作為打卡唯一用途",
+              () => { startCountdown(action, force, true); },
+              () => { responseDiv.innerHTML = "<span style='color:orange;'>已取消打卡</span>"; }
+            );
+          } else {
+            displayError(result.message);
+          }
+        }
+      } catch (err) {
+        displayError(`網路檢查失敗: ${err}`);
+      }
+    }
+
+    function startCountdown(action, force, bindDevice) {
+      overlay.classList.add("show");
+      let countdown = 5;
+      modalMessage.textContent = `將於 ${countdown} 秒後建立 ${action} 打卡`;
+      const timer = setInterval(() => {
+        countdown--;
+        modalMessage.textContent = `將於 ${countdown} 秒後建立 ${action} 打卡`;
+        if (countdown <= 0) {
+          clearInterval(timer);
+          overlay.classList.remove("show");
+          handleAction(action, force, bindDevice);
+        }
+      }, 1000);
+
+      cancelBtn.onclick = () => {
+        clearInterval(timer);
+        overlay.classList.remove("show");
+        responseDiv.innerHTML = "<span style='color:orange;'>已取消打卡</span>";
+      };
+      confirmBtn.onclick = () => {
+        clearInterval(timer);
+        overlay.classList.remove("show");
+        handleAction(action, force, bindDevice);
+      };
+    }
+
+    async function handleAction(action, force, bindDevice) {
+      const idCode = idInput.value;
+      responseDiv.innerHTML = "<span class='loading'>審核中｜請稍候...</span>";
+      responseDiv.classList.add("show");
+      try {
+        const coords = await new Promise((resolve, reject) => {
+          getLocation(resolve, reject);
+        });
+        const deviceInfo = JSON.stringify({
+          OS: navigator.platform,
+          Browser: navigator.userAgent
+        });
+        const uuid = getDeviceUUID();
+        const result = await callGAS("gpsCheckin", [idCode, deviceInfo, action, coords.lat, coords.lng, force, bindDevice, uuid]);
+        if (result.status === "success") {
+          let finalMsg = result.message;
+          if (result.detail && result.detail.time) {
+            finalMsg += `<br><span style='color:#fff;'>${result.detail.time}</span>`;
+          }
+          responseDiv.innerHTML = `<div style="color:green; font-weight:bold; text-align:center;">${finalMsg}</div>`;
+        } else if (result.status === "error") {
+          displayError(result.message);
+        } else {
+          displayError("未知的回傳狀態");
+        }
+      } catch (err) {
+        displayError(`連線失敗，請檢查網路: ${err}`);
+      }
+    }
+
+    function getLocation(successCallback, errorCallback) {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            successCallback({ lat: position.coords.latitude, lng: position.coords.longitude });
+          },
+          (error) => {
+            errorCallback("定位失敗｜請開啟瀏覽器定位功能|重新整理");
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      } else {
+        errorCallback("此瀏覽器不支援 Geolocation API");
+      }
+    }
+
+    async function testLocation() {
+      const now = Date.now();
+      if (now - lastTestLocationTime < COOLDOWN_MS) {
+        displayError("每10秒得測試一次");
+        return;
+      }
+      lastTestLocationTime = now;
+
+      const idCode = idInput.value;
+      responseDiv.innerHTML = "<span class='loading'>定位測試中｜請稍候...</span>";
+      responseDiv.classList.add("show");
+      if (!/^\d{4}$/.test(idCode)) {
+        displayError("請先輸入完整的身分證後四碼");
+        return;
+      }
+      if (!navigator.onLine) {
+        displayError("離線狀態無法測試定位");
+        return;
+      }
+      try {
+        const coords = await new Promise((resolve, reject) => {
+          getLocation(resolve, reject);
+        });
+        const result = await callGAS("testLocationWithAuth", [idCode, coords.lat, coords.lng]);
+        if (result.status === "success") {
+          responseDiv.innerHTML = result.html ? `<div class="table-responsive">${result.html}</div>` : "無資料";
+        } else {
+          displayError(result.message);
+        }
+      } catch (err) {
+        displayError(`測試定位失敗: ${err}`);
+      }
+    }
+
+    async function queryTodayRecords() {
+      const now = Date.now();
+      if (now - lastQueryTime < COOLDOWN_MS) {
+        displayError("每10秒得查詢一次");
+        return;
+      }
+      lastQueryTime = now;
+
+      const idCode = idInput.value;
+      responseDiv.innerHTML = "<span class='loading'>查詢中｜請稍候...</span>";
+      responseDiv.classList.add("show");
+      if (!/^\d{4}$/.test(idCode)) {
+        displayError("請先輸入完整的身分證後四碼");
+        return;
+      }
+      if (!navigator.onLine) {
+        displayError("離線狀態無法查詢");
+        return;
+      }
+      try {
+        const result = await callGAS("queryTodayRecords", [idCode]);
+        if (result.status === "success") {
+          const tableHTML = result.html ? `<div class="table-responsive">${result.html}</div>` : "無資料";
+          responseDiv.innerHTML = tableHTML;
+        } else {
+          displayError(result.message);
+        }
+      } catch (err) {
+        displayError(`查詢失敗: ${err}`);
+      }
+    }
+
+    document.getElementById("btnOn").addEventListener("click", () => { startClockAction("上班", false); });
+    document.getElementById("btnOff").addEventListener("click", () => { startClockAction("下班", false); });
+    document.getElementById("btnQuery").addEventListener("click", () => { queryTodayRecords(); });
+    document.getElementById("btnTest").addEventListener("click", () => { testLocation(); });
+
+    // 頁面載入時檢測無痕模式，改用全屏提示而非 alert
+    window.onload = async () => {
+      const isIncognito = await detectIncognito();
+      if (isIncognito) {
+        incognitoPrompt.style.display = "flex";
+      }
+    };
+  </script>
+</body>
+</html>
