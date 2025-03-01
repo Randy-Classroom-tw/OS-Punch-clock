@@ -284,12 +284,22 @@
       font-size: 16px;
       border: none;
       border-radius: 6px;
+      cursor: pointer;
+      margin: 0 5px;
+    }
+    #incognitoPrompt .prompt-content button#confirmIncognito {
       background-color: #28a745;
       color: #fff;
-      cursor: pointer;
     }
-    #incognitoPrompt .prompt-content button:hover {
+    #incognitoPrompt .prompt-content button#confirmIncognito:hover {
       background-color: #1e7e34;
+    }
+    #incognitoPrompt .prompt-content button#cancelIncognito {
+      background-color: #e74c3c;
+      color: #fff;
+    }
+    #incognitoPrompt .prompt-content button#cancelIncognito:hover {
+      background-color: #c0392b;
     }
   </style>
 </head>
@@ -349,6 +359,7 @@
       <h2>系統提示</h2>
       <p>本系統在無痕模式下執行，請確保關閉無痕瀏覽視窗</p>
       <button id="confirmIncognito">我已確認關閉</button>
+      <button id="cancelIncognito">取消</button>
     </div>
   </div>
   
@@ -372,8 +383,16 @@
     // 無痕模式提示遮罩 (直接顯示，不做偵測)
     const incognitoPrompt = document.getElementById("incognitoPrompt");
     const confirmIncognito = document.getElementById("confirmIncognito");
+    const cancelIncognito = document.getElementById("cancelIncognito");
+
     confirmIncognito.addEventListener("click", () => {
+      // 點擊「我已確認關閉」後，關閉提示窗
       incognitoPrompt.style.display = "none";
+    });
+
+    cancelIncognito.addEventListener("click", () => {
+      // 點擊「取消」則顯示警告，不關閉提示窗
+      alert("您已取消，無法進入系統！");
     });
 
     // 顯示/隱藏密碼按鈕
