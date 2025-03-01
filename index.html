@@ -506,7 +506,7 @@
             successCallback({ lat: position.coords.latitude, lng: position.coords.longitude });
           },
           (error) => {
-            errorCallback("定位失敗｜請開啟定位功能｜確認所在地");
+            errorCallback("定位失敗｜請開啟瀏覽器定位功能|重新整理");
           },
           { enableHighAccuracy: true, timeout: 10000 }
         );
