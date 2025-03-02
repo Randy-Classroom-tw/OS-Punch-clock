@@ -455,30 +455,19 @@
       };
     }
 
-    // 生成設備指紋 (原本邏輯不變)
-    function generateDeviceFingerprint() {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      ctx.textBaseline = "top";
-      ctx.font = "14px 'Arial'";
-      ctx.fillStyle = "#f60";
-      ctx.fillRect(125, 1, 62, 20);
-      ctx.fillStyle = "#069";
-      ctx.fillText("Fingerprint Test", 2, 15);
-      const canvasData = canvas.toDataURL();
-      const fingerprint = [
-        navigator.userAgent,
-        navigator.language,
-        screen.width + "x" + screen.height,
-        canvasData.slice(-10),
-      ].join("|");
-      return btoa(fingerprint);
-    }
-
+    // 移除設備指紋，僅保留 UUID：利用 crypto.randomUUID (若支援) 產生唯一識別碼
     function getDeviceUUID() {
       let uuid = localStorage.getItem("deviceUUID");
       if (!uuid) {
-        uuid = generateDeviceFingerprint();
+        if (crypto && crypto.randomUUID) {
+          uuid = crypto.randomUUID();
+        } else {
+          // fallback 隨機生成 UUID (v4)
+          uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random()*16|0, v = c === 'x' ? r : (r&0x3|0x8);
+            return v.toString(16);
+          });
+        }
         localStorage.setItem("deviceUUID", uuid);
       }
       return uuid;
@@ -501,7 +490,7 @@
       // 檢查目前使用的瀏覽器是否符合要求
       const currentBrowser = detectBrowser(navigator.userAgent);
       if (!currentBrowser) {
-        displayError("請使用 Microsoft Edge、Chrome、Safari 或 Firefox 進行設備綁定");
+        displayError("請使用 Microsoft Edge、Chrome、Safari 或 Firefox 進行綁定");
         return;
       }
 
