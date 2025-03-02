@@ -568,9 +568,9 @@
       const currentBrowser = detectBrowser(navigator.userAgent);
       if (!currentBrowser) {
         // 第一階段提示
-        let errorMsg = "請使用 Microsoft Edge、Chrome、Safari 或 Firefox 進行綁定<br>";
+        let errorMsg = "下列瀏覽器才允許綁定<br>Edge、Chrome、Safari、Firefox<br>";
         // 第二階段提示：加入點擊連結後可觀看教學影片
-        errorMsg += "請點擊<a href='#' id='tutorialLink'>查看教學影片</a>";
+        errorMsg += "請查看 <a href='#' id='tutorialLink'> 【 教學影片 】</a>";
         displayError(errorMsg);
         document.getElementById("tutorialLink").addEventListener("click", function(e) {
           e.preventDefault();
