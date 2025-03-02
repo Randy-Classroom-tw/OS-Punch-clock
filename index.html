@@ -19,7 +19,6 @@
       visibility: hidden !important;
       pointer-events: none !important;
     }
-
     /* 重設與字型 */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
@@ -32,12 +31,9 @@
       align-items: center;
       justify-content: center;
       padding: 20px;
-      /* 新增：全域粗體+立體陰影 */
       font-weight: 700;
       text-shadow: 1px 1px 2px #000;
     }
-    
-    /* 主要容器：對稱、立體科技感 */
     .container {
       background: rgba(20, 20, 20, 0.95);
       border: 2px solid #333;
@@ -48,15 +44,11 @@
       width: 100%;
       text-align: center;
     }
-    
-    /* Logo 置中，加入輕微立體感 */
     .logo {
       width: 150px;
       margin: 0 auto 20px;
       filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.6));
     }
-    
-    /* 標題風格：大膽、對稱、科技感 (移除原本 text-shadow 避免疊加) */
     h1 {
       font-size: 36px;
       letter-spacing: 2px;
@@ -69,8 +61,6 @@
       color: #bbb;
       margin-bottom: 30px;
     }
-    
-    /* 表單區塊 */
     form {
       background: rgba(40,40,40,0.8);
       border: 1px solid #333;
@@ -120,8 +110,6 @@
       transition: color 0.3s;
     }
     .toggle-btn:hover { color: #fff; }
-    
-    /* 按鈕群組 */
     .btn-group {
       display: flex;
       flex-wrap: wrap;
@@ -154,8 +142,6 @@
     .btn-test {
       background: linear-gradient(145deg, #f39c12, #e67e22);
     }
-    
-    /* 回應訊息 */
     #response {
       margin-top: 10px;
       font-size: 20px;
@@ -167,7 +153,7 @@
       opacity: 0;
       transform: translateY(-10px);
       transition: opacity 0.5s ease, transform 0.5s ease;
-      color: #76ff03; /* 綠色文字 */
+      color: #76ff03;
     }
     #response.show {
       opacity: 1;
@@ -183,8 +169,6 @@
       50% { opacity: 0.4; }
       100% { opacity: 1; }
     }
-    
-    /* Modal 視窗 */
     .overlay {
       position: fixed;
       top: 0; left: 0;
@@ -210,7 +194,6 @@
       font-size: 24px;
       margin-bottom: 12px;
       letter-spacing: 1px;
-      /* 移除舊的 text-shadow 避免疊加 */
     }
     .modal p {
       font-size: 18px;
@@ -236,31 +219,6 @@
     .btn-cancel { background: #e74c3c; color: #fff; }
     .btn-confirm:hover { background: #1e7e34; }
     .btn-cancel:hover { background: #c0392b; }
-    
-    /* 響應式 */
-    @media screen and (max-width: 640px) {
-      .container { padding: 30px; }
-      .logo { width: 120px; }
-      h1 { font-size: 28px; }
-      h2 { font-size: 16px; margin-bottom: 20px; }
-      input { font-size: 18px; }
-      .btn { font-size: 18px; padding: 14px; }
-      #response { font-size: 18px; }
-      .modal h3 { font-size: 22px; }
-      .modal p, .modal .btn { font-size: 16px; }
-    }
-    
-    /* 表格水平滾動 */
-    .table-responsive {
-      width: 100%;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-    .table-responsive table {
-      min-width: 600px;
-    }
-    
-    /* 固定顯示的無痕模式提示遮罩 */
     #incognitoPrompt {
       position: fixed;
       top: 0; left: 0;
@@ -285,14 +243,12 @@
       margin-bottom: 20px;
       color: #fff;
       font-size: 24px;
-      /* 全域已有陰影，故不再額外加 */
     }
     #incognitoPrompt .prompt-content p {
       margin-bottom: 20px;
       font-size: 18px;
       color: #ddd;
     }
-    /* 按鈕群組：等寬、對齊 */
     #incognitoPrompt .prompt-content .button-group {
       display: flex;
       gap: 16px;
@@ -364,7 +320,7 @@
     <div id="response" role="status" aria-live="polite"></div>
   </div>
   
-  <!-- 原有 Modal -->
+  <!-- Modal 視窗 -->
   <div id="overlay" class="overlay">
     <div class="modal">
       <h3 id="modal-title">提示</h3>
@@ -376,7 +332,7 @@
     </div>
   </div>
   
-  <!-- 固定顯示的無痕模式提示遮罩 -->
+  <!-- 無痕模式提示遮罩 -->
   <div id="incognitoPrompt">
     <div class="prompt-content">
       <h2>系統提示</h2>
@@ -405,18 +361,15 @@
     const confirmBtn = document.getElementById("modal-confirm");
     const cancelBtn = document.getElementById("modal-cancel");
 
-    // 無痕模式提示遮罩 (直接顯示，不做偵測)
+    // 無痕模式提示遮罩
     const incognitoPrompt = document.getElementById("incognitoPrompt");
     const confirmIncognito = document.getElementById("confirmIncognito");
     const cancelIncognito = document.getElementById("cancelIncognito");
 
     confirmIncognito.addEventListener("click", () => {
-      // 點擊「我已確認關閉」後，關閉提示窗
       incognitoPrompt.style.display = "none";
     });
-
     cancelIncognito.addEventListener("click", () => {
-      // 點擊「取消」則顯示警告，不關閉提示窗
       alert("您已取消，無法進入系統！");
     });
 
@@ -431,7 +384,7 @@
       }
     });
 
-    // 僅允許輸入數字 + 維持 4 位數檢查
+    // 僅允許輸入數字且維持 4 位數
     idInput.addEventListener("input", () => {
       if (idInput.value && !/^\d*$/.test(idInput.value)) {
         alert("請切換輸入法｜輸入正規四碼數字");
@@ -449,6 +402,21 @@
 
     function displayError(msg) {
       responseDiv.innerHTML = `<div style="color:red; text-align:center;">${msg}</div>`;
+    }
+
+    // 新增：前端瀏覽器偵測函式（邏輯與後端 parseBrowser 相同）
+    function detectBrowser(userAgent) {
+      const ua = userAgent.toLowerCase();
+      if (ua.indexOf("edg/") > -1) {
+        return "Microsoft Edge";
+      } else if (ua.indexOf("chrome/") > -1) {
+        return "Chrome";
+      } else if (ua.indexOf("safari/") > -1 && ua.indexOf("chrome/") === -1) {
+        return "Safari";
+      } else if (ua.indexOf("firefox/") > -1) {
+        return "Firefox";
+      }
+      return null;
     }
 
     function callGAS(functionName, parametersArray) {
@@ -487,7 +455,7 @@
       };
     }
 
-    // 生成設備指紋
+    // 生成設備指紋 (原本邏輯不變)
     function generateDeviceFingerprint() {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
@@ -530,15 +498,22 @@
         return;
       }
 
-      // 不偵測無痕模式，直接檢查裝置綁定
+      // 檢查目前使用的瀏覽器是否符合要求
+      const currentBrowser = detectBrowser(navigator.userAgent);
+      if (!currentBrowser) {
+        displayError("請使用 Microsoft Edge、Chrome、Safari 或 Firefox 進行設備綁定");
+        return;
+      }
+
       try {
         const result = await callGAS("checkDeviceBinding", [idCode]);
         if (result.status === "success") {
           startCountdown(action, force, false);
         } else if (result.status === "error") {
           if (result.error === "NOT_BOUND") {
+            // 在提示訊息中告知使用者目前使用的瀏覽器名稱
             showCustomConfirm(
-              "請確認同意綁定本裝置｜作為打卡唯一用途",
+              `您目前使用的是 ${currentBrowser}，是否確認綁定此瀏覽器作為設備？`,
               () => { startCountdown(action, force, true); },
               () => { responseDiv.innerHTML = "<span style='color:orange;'>已取消打卡</span>"; }
             );
@@ -694,7 +669,7 @@
     document.getElementById("btnQuery").addEventListener("click", () => { queryTodayRecords(); });
     document.getElementById("btnTest").addEventListener("click", () => { testLocation(); });
 
-    // 頁面載入時直接跳出無痕模式提示窗
+    // 頁面載入時顯示無痕模式提示
     window.onload = () => {
       incognitoPrompt.style.display = "flex";
     };
