@@ -23,7 +23,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     body {
-      background: linear-gradient(145deg, #0a0a0a, #1a1a1a);
+      background: linear-gradient(145deg, #0a0a0a, #1a0a0a);
       font-family: 'Roboto Mono', monospace;
       color: #e0e0e0;
       min-height: 100vh;
@@ -318,6 +318,8 @@
     </div>
     
     <div id="response" role="status" aria-live="polite"></div>
+    <!-- 新增影片容器，當使用LINE內建瀏覽器錯誤時顯示 -->
+    <div id="videoContainer" style="margin-top:20px;"></div>
   </div>
   
   <!-- Modal 視窗 -->
@@ -400,8 +402,20 @@
       }
     });
 
-    function displayError(msg) {
+    // 修改 displayError()，當錯誤訊息為指定瀏覽器錯誤時，顯示影片
+    function displayError(msg, errorCode) {
       responseDiv.innerHTML = `<div style="color:red; text-align:center;">${msg}</div>`;
+      
+      if (errorCode === "UNSUPPORTED_BROWSER") {
+        document.getElementById("videoContainer").innerHTML = `
+          <video controls width="400">
+            <source src="https://i.imgur.com/Wnemzxu.mp4" type="video/mp4">
+            您的瀏覽器不支援此影片播放。
+          </video>
+        `;
+      } else {
+        document.getElementById("videoContainer").innerHTML = "";
+      }
     }
 
     // 新增：前端瀏覽器偵測函式（邏輯與後端 parseBrowser 相同）
@@ -490,7 +504,7 @@
       // 檢查目前使用的瀏覽器是否符合要求
       const currentBrowser = detectBrowser(navigator.userAgent);
       if (!currentBrowser) {
-        displayError("請使用 Microsoft Edge、Chrome、Safari 或 Firefox 進行綁定");
+        displayError("請使用 Microsoft Edge、Chrome、Safari 或 Firefox 進行綁定", "UNSUPPORTED_BROWSER");
         return;
       }
 
@@ -507,7 +521,7 @@
               () => { responseDiv.innerHTML = "<span style='color:orange;'>已取消打卡</span>"; }
             );
           } else {
-            displayError(result.message);
+            displayError(result.message, result.error);
           }
         }
       } catch (err) {
@@ -562,7 +576,7 @@
           }
           responseDiv.innerHTML = `<div style="color:green; font-weight:bold; text-align:center;">${finalMsg}</div>`;
         } else if (result.status === "error") {
-          displayError(result.message);
+          displayError(result.message, result.error);
         } else {
           displayError("未知的回傳狀態");
         }
