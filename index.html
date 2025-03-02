@@ -513,7 +513,7 @@
           if (result.error === "NOT_BOUND") {
             // 在提示訊息中告知使用者目前使用的瀏覽器名稱
             showCustomConfirm(
-              `您目前使用的是 ${currentBrowser}，是否確認綁定此瀏覽器作為設備？`,
+              `是否同意確認綁定設備 ${currentBrowser}，`,
               () => { startCountdown(action, force, true); },
               () => { responseDiv.innerHTML = "<span style='color:orange;'>已取消打卡</span>"; }
             );
