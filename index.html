@@ -5,25 +5,11 @@
   <title>OS_Office_ANN</title>
   <meta name="viewport" content="width=device-width, initial-scale=0.7" />
   <link rel="icon" type="image/png" sizes="32x32" href="https://i.imgur.com/7obx0vd.jpg">
-  <link rel="apple-touch-icon" href="https://i.imgur.com/7obx0vd.jpg">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-  <!-- 等寬字體 Roboto Mono -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap">
   <style>
-    /* 針對各瀏覽器的內建顯示密碼圖示調整 */
-    input::-ms-reveal,
-    input::-ms-clear {
-      display: none !important;
-    }
-    input[type=password]::-webkit-textfield-decoration-container {
-      visibility: hidden !important;
-      pointer-events: none !important;
-    }
-    /* 重設與字型 */
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     body {
-      background: linear-gradient(145deg, #0a0a0a, #1a0a0a);
+      background: linear-gradient(145deg, #0a0a0a, #1a1a1a);
       font-family: 'Roboto Mono', monospace;
       color: #e0e0e0;
       min-height: 100vh;
@@ -31,651 +17,103 @@
       align-items: center;
       justify-content: center;
       padding: 20px;
-      font-weight: 700;
-      text-shadow: 1px 1px 2px #000;
     }
     .container {
       background: rgba(20, 20, 20, 0.95);
-      border: 2px solid #333;
       border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.8), inset 0 2px 4px rgba(255,255,255,0.05);
       padding: 40px;
       max-width: 700px;
-      width: 100%;
       text-align: center;
     }
-    .logo {
-      width: 150px;
-      margin: 0 auto 20px;
-      filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.6));
-    }
-    h1 {
-      font-size: 36px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: #fff;
-      margin-bottom: 10px;
-    }
-    h2 {
-      font-size: 20px;
-      color: #bbb;
-      margin-bottom: 30px;
-    }
-    form {
-      background: rgba(40,40,40,0.8);
-      border: 1px solid #333;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 30px;
-      box-shadow: inset 0 2px 8px rgba(0,0,0,0.7);
-    }
-    label {
-      display: block;
-      font-size: 18px;
-      margin-bottom: 10px;
-      color: #ccc;
-    }
-    .input-group {
-      position: relative;
-      margin-bottom: 8px;
-    }
-    input[type="password"],
-    input[type="text"],
-    input[type="tel"] {
-      width: 100%;
-      font-size: 20px;
-      padding: 14px 50px 14px 16px;
-      border: none;
-      border-radius: 6px;
-      background-color: #222;
-      color: #fff;
-      text-align: center;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
-      transition: background 0.3s, box-shadow 0.3s;
-    }
-    input:focus {
-      background-color: #333;
-      box-shadow: 0 0 8px rgba(0,176,255,0.6), inset 0 2px 6px rgba(0,0,0,0.5);
-    }
-    .toggle-btn {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: transparent;
-      border: none;
-      color: #aaa;
-      font-size: 22px;
-      cursor: pointer;
-      transition: color 0.3s;
-    }
-    .toggle-btn:hover { color: #fff; }
-    .btn-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-    .btn {
-      flex: 1 1 150px;
-      padding: 14px;
-      font-size: 20px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.6), inset 0 -2px 0 rgba(0,0,0,0.2);
-      color: #fff;
-    }
+    .logo { width: 150px; margin-bottom: 20px; }
+    h1 { font-size: 36px; color: #fff; margin-bottom: 10px; }
+    h2 { font-size: 20px; color: #bbb; margin-bottom: 30px; }
+    .btn { padding: 14px; font-size: 20px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; }
+    .btn-on { background: linear-gradient(145deg, #28a745, #1e7e34); color: white; }
+    .btn-off { background: linear-gradient(145deg, #e74c3c, #c0392b); color: white; }
+    .btn-query { background: linear-gradient(145deg, #3498db, #2980b9); color: white; }
+    .btn-test { background: linear-gradient(145deg, #f39c12, #e67e22); color: white; }
     .btn:hover { transform: translateY(-3px); }
-    .btn:active { transform: translateY(0); }
-    .btn-on {
-      background: linear-gradient(145deg, #28a745, #1e7e34);
-    }
-    .btn-off {
-      background: linear-gradient(145deg, #e74c3c, #c0392b);
-    }
-    .btn-query {
-      background: linear-gradient(145deg, #3498db, #2980b9);
-    }
-    .btn-test {
-      background: linear-gradient(145deg, #f39c12, #e67e22);
-    }
-    #response {
-      margin-top: 10px;
-      font-size: 20px;
-      background: rgba(0,0,0,0.4);
-      border-radius: 6px;
-      padding: 10px;
-      min-height: 40px;
-      box-shadow: inset 0 1px 3px rgba(0,0,0,0.7);
-      opacity: 0;
-      transform: translateY(-10px);
-      transition: opacity 0.5s ease, transform 0.5s ease;
-      color: #76ff03;
-    }
-    #response.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    .loading {
-      font-size: 20px;
-      color: #ff4444;
-      animation: blink 1s infinite;
-    }
-    @keyframes blink {
-      0% { opacity: 1; }
-      50% { opacity: 0.4; }
-      100% { opacity: 1; }
-    }
+    .btn-group { display: flex; gap: 16px; justify-content: center; }
     .overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.75);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-    }
-    .overlay.show { display: flex; }
-    .modal {
-      background: #222;
-      padding: 24px;
-      border-radius: 10px;
-      width: 90%;
-      max-width: 400px;
-      color: #fff;
-      text-align: center;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.8);
-    }
-    .modal h3 {
-      font-size: 24px;
-      margin-bottom: 12px;
-      letter-spacing: 1px;
-    }
-    .modal p {
-      font-size: 18px;
-      margin-bottom: 20px;
-    }
-    .modal-buttons {
-      display: flex;
-      gap: 12px;
-      justify-content: space-evenly;
-    }
-    .modal .btn {
-      flex: 1;
-      padding: 10px;
-      border-radius: 6px;
-      font-size: 20px;
-      font-family: 'Roboto Mono', monospace;
-      cursor: pointer;
-      transition: background 0.3s, transform 0.3s;
-      box-shadow: none;
-      border: none;
-    }
-    .btn-confirm { background: #28a745; color: #fff; }
-    .btn-cancel { background: #e74c3c; color: #fff; }
-    .btn-confirm:hover { background: #1e7e34; }
-    .btn-cancel:hover { background: #c0392b; }
-    #incognitoPrompt {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.85);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 10000;
+      display: flex; justify-content: center; align-items: center;
+      z-index: 9999; display: none;
     }
-    #incognitoPrompt .prompt-content {
-      background: #222;
-      border: 2px solid #444;
-      border-radius: 10px;
-      padding: 20px 30px;
-      text-align: center;
-      max-width: 450px;
-      width: 90%;
+    .modal {
+      background: #222; padding: 24px; border-radius: 10px;
+      max-width: 400px; color: #fff; text-align: center;
     }
-    #incognitoPrompt .prompt-content h2 {
-      margin-bottom: 20px;
-      color: #fff;
-      font-size: 24px;
-    }
-    #incognitoPrompt .prompt-content p {
-      margin-bottom: 20px;
-      font-size: 18px;
-      color: #ddd;
-    }
-    #incognitoPrompt .prompt-content .button-group {
-      display: flex;
-      gap: 16px;
-      justify-content: center;
-    }
-    #incognitoPrompt .prompt-content .button-group button {
-      font-family: 'Roboto Mono', monospace;
-      flex: 1;
-      min-width: 120px;
-      text-align: center;
-      padding: 12px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    #confirmIncognito {
-      background-color: #28a745;
-      color: #fff;
-    }
-    #confirmIncognito:hover {
-      background-color: #1e7e34;
-    }
-    #cancelIncognito {
-      background-color: #e74c3c;
-      color: #fff;
-    }
-    #cancelIncognito:hover {
-      background-color: #c0392b;
-    }
+    video { width: 100%; border-radius: 8px; margin-bottom: 20px; }
+    .modal-buttons { display: flex; gap: 12px; justify-content: center; }
+    .modal .btn { flex: 1; padding: 10px; font-size: 16px; border: none; border-radius: 6px; cursor: pointer; }
+    .btn-confirm { background: #28a745; color: #fff; }
+    .btn-confirm:hover { background: #1e7e34; }
   </style>
 </head>
 <body>
   <div class="container">
-    <img class="logo" src="https://i.imgur.com/7obx0vd.jpg" alt="Logo" crossorigin="anonymous">
+    <img class="logo" src="https://i.imgur.com/7obx0vd.jpg" alt="Logo">
     <h1>OS_Office_ANN</h1>
     <h2>請輸入身分證後四碼執行打卡</h2>
-    
-    <form id="idForm">
-      <label for="idCode">請點擊下方框內輸入後四碼</label>
-      <div class="input-group">
-        <input 
-          type="password" 
-          id="idCode" 
-          name="idCode" 
-          required 
-          pattern="\d{4}" 
-          maxlength="4" 
-          inputmode="numeric"
-          autocomplete="off" 
-          autocorrect="off" 
-          autocapitalize="off" 
-          spellcheck="false"
-        />
-        <button type="button" class="toggle-btn" id="toggleBtn">
-          <span class="material-icons" id="eyeIcon">visibility</span>
-        </button>
-      </div>
-    </form>
-    
     <div class="btn-group">
       <button class="btn btn-on" id="btnOn">上班</button>
       <button class="btn btn-off" id="btnOff">下班</button>
       <button class="btn btn-query" id="btnQuery">查詢記錄</button>
       <button class="btn btn-test" id="btnTest">測試定位</button>
     </div>
-    
-    <div id="response" role="status" aria-live="polite"></div>
-    <!-- 新增影片容器，當使用LINE內建瀏覽器錯誤時顯示 -->
-    <div id="videoContainer" style="margin-top:20px;"></div>
   </div>
-  
-  <!-- Modal 視窗 -->
-  <div id="overlay" class="overlay">
+
+  <!-- 教學影片模態視窗 -->
+  <div class="overlay" id="videoOverlay">
     <div class="modal">
-      <h3 id="modal-title">提示</h3>
-      <p id="modal-message">提示訊息</p>
+      <h3>請使用支援的瀏覽器</h3>
+      <p>請使用 Microsoft Edge、Chrome、Safari 或 Firefox，並參考以下影片說明：</p>
+      <video controls>
+        <source src="https://i.imgur.com/Wnemzxu.mp4" type="video/mp4">
+        您的瀏覽器不支援影片播放，請至 <a href="https://imgur.com/Wnemzxu" target="_blank">這裡觀看</a>。
+      </video>
       <div class="modal-buttons">
-        <button id="modal-confirm" class="btn btn-confirm">確定</button>
-        <button id="modal-cancel" class="btn btn-cancel">取消</button>
+        <button id="closeVideo" class="btn btn-confirm">確定</button>
       </div>
     </div>
   </div>
-  
-  <!-- 無痕模式提示遮罩 -->
-  <div id="incognitoPrompt">
-    <div class="prompt-content">
-      <h2>系統提示</h2>
-      <p>請確保關閉無痕瀏覽器模式後再執行</p>
-      <div class="button-group">
-        <button id="confirmIncognito">我已確認關閉</button>
-        <button id="cancelIncognito">取消</button>
-      </div>
-    </div>
-  </div>
-  
+
   <script>
-    // 請換成您重新部署的 exec 網址
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwDG3H75wlZsvt80Gu0-0WsaX6Igh4hBWEZENOfhsFATmys0--P_rSn_J1zaP2oehogIg/exec";
-
-    let lastTestLocationTime = 0;
-    let lastQueryTime = 0;
-    const COOLDOWN_MS = 10000;
-
-    const toggleBtn = document.getElementById("toggleBtn");
-    const idInput = document.getElementById("idCode");
-    const eyeIcon = document.getElementById("eyeIcon");
-    const responseDiv = document.getElementById("response");
-    const overlay = document.getElementById("overlay");
-    const modalMessage = document.getElementById("modal-message");
-    const confirmBtn = document.getElementById("modal-confirm");
-    const cancelBtn = document.getElementById("modal-cancel");
-
-    // 無痕模式提示遮罩
-    const incognitoPrompt = document.getElementById("incognitoPrompt");
-    const confirmIncognito = document.getElementById("confirmIncognito");
-    const cancelIncognito = document.getElementById("cancelIncognito");
-
-    confirmIncognito.addEventListener("click", () => {
-      incognitoPrompt.style.display = "none";
-    });
-    cancelIncognito.addEventListener("click", () => {
-      alert("您已取消，無法進入系統！");
-    });
-
-    // 顯示/隱藏密碼按鈕
-    toggleBtn.addEventListener("click", () => {
-      if (idInput.type === "password") {
-        idInput.type = "text";
-        eyeIcon.textContent = "visibility_off";
-      } else {
-        idInput.type = "password";
-        eyeIcon.textContent = "visibility";
-      }
-    });
-
-    // 僅允許輸入數字且維持 4 位數
-    idInput.addEventListener("input", () => {
-      if (idInput.value && !/^\d*$/.test(idInput.value)) {
-        alert("請切換輸入法｜輸入正規四碼數字");
-        idInput.value = idInput.value.replace(/\D/g, "");
-      }
-      const pattern = /^\d{0,4}$/;
-      if (!pattern.test(idInput.value)) {
-        idInput.setCustomValidity("請輸入 0 到 4 個數字");
-      } else if (idInput.value.length !== 4) {
-        idInput.setCustomValidity("必須填寫完整 4 位數");
-      } else {
-        idInput.setCustomValidity("");
-      }
-    });
-
-    // 修改 displayError()，當錯誤訊息為指定瀏覽器錯誤時，顯示影片
-    function displayError(msg, errorCode) {
-      responseDiv.innerHTML = `<div style="color:red; text-align:center;">${msg}</div>`;
-      
-      if (errorCode === "UNSUPPORTED_BROWSER") {
-        document.getElementById("videoContainer").innerHTML = `
-          <video controls width="400">
-            <source src="https://i.imgur.com/Wnemzxu.mp4" type="video/mp4">
-            您的瀏覽器不支援此影片播放。
-          </video>
-        `;
-      } else {
-        document.getElementById("videoContainer").innerHTML = "";
-      }
-    }
-
-    // 新增：前端瀏覽器偵測函式（邏輯與後端 parseBrowser 相同）
+    // 檢測瀏覽器類型
     function detectBrowser(userAgent) {
       const ua = userAgent.toLowerCase();
-      if (ua.indexOf("edg/") > -1) {
-        return "Microsoft Edge";
-      } else if (ua.indexOf("chrome/") > -1) {
-        return "Chrome";
-      } else if (ua.indexOf("safari/") > -1 && ua.indexOf("chrome/") === -1) {
-        return "Safari";
-      } else if (ua.indexOf("firefox/") > -1) {
-        return "Firefox";
-      }
+      if (ua.includes("edg/")) return "Microsoft Edge";
+      if (ua.includes("chrome/")) return "Chrome";
+      if (ua.includes("safari/") && !ua.includes("chrome/")) return "Safari";
+      if (ua.includes("firefox/")) return "Firefox";
       return null;
     }
 
-    function callGAS(functionName, parametersArray) {
-      const formData = new URLSearchParams();
-      formData.append("function", functionName);
-      formData.append("parameters", JSON.stringify(parametersArray));
-      return fetch(WEB_APP_URL, {
-        method: "POST",
-        mode: "cors",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: formData
-      })
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`網路狀態異常, status=${res.status}, message=${res.statusText}`);
-        }
-        return res.json();
-      })
-      .catch(err => {
-        throw new Error(`Fetch error: ${err}`);
-      });
+    // 顯示教學影片模態視窗
+    function showBrowserGuide() {
+      document.getElementById("videoOverlay").style.display = "flex";
     }
 
-    function showCustomConfirm(message, onConfirm, onCancel) {
-      modalMessage.textContent = message;
-      overlay.classList.add("show");
-      confirmBtn.onclick = () => {
-        overlay.classList.remove("show");
-        if (onConfirm) onConfirm();
-      };
-      cancelBtn.onclick = () => {
-        overlay.classList.remove("show");
-        if (onCancel) onCancel();
-      };
-    }
+    document.getElementById("closeVideo").addEventListener("click", () => {
+      document.getElementById("videoOverlay").style.display = "none";
+    });
 
-    // 移除設備指紋，僅保留 UUID：利用 crypto.randomUUID (若支援) 產生唯一識別碼
-    function getDeviceUUID() {
-      let uuid = localStorage.getItem("deviceUUID");
-      if (!uuid) {
-        if (crypto && crypto.randomUUID) {
-          uuid = crypto.randomUUID();
-        } else {
-          // fallback 隨機生成 UUID (v4)
-          uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            const r = Math.random()*16|0, v = c === 'x' ? r : (r&0x3|0x8);
-            return v.toString(16);
-          });
-        }
-        localStorage.setItem("deviceUUID", uuid);
-      }
-      return uuid;
-    }
-
-    async function startClockAction(action, force) {
-      const idCode = idInput.value;
-      responseDiv.innerHTML = "<span class='loading'>檢查中｜請稍候...</span>";
-      responseDiv.classList.add("show");
-
-      if (!/^\d{4}$/.test(idCode)) {
-        displayError("請先輸入完整的身分證後四碼");
-        return;
-      }
-      if (!navigator.onLine) {
-        displayError("請確認網路連線");
-        return;
-      }
-
-      // 檢查目前使用的瀏覽器是否符合要求
+    // 開始打卡動作，並檢查瀏覽器
+    function startClockAction(action) {
       const currentBrowser = detectBrowser(navigator.userAgent);
       if (!currentBrowser) {
-        displayError("請使用 Microsoft Edge、Chrome、Safari 或 Firefox 進行綁定", "UNSUPPORTED_BROWSER");
+        showBrowserGuide(); // 觸發教學影片
         return;
       }
-
-      try {
-        const result = await callGAS("checkDeviceBinding", [idCode]);
-        if (result.status === "success") {
-          startCountdown(action, force, false);
-        } else if (result.status === "error") {
-          if (result.error === "NOT_BOUND") {
-            // 在提示訊息中告知使用者目前使用的瀏覽器名稱
-            showCustomConfirm(
-              `是否同意綁定 ${currentBrowser}`,
-              () => { startCountdown(action, force, true); },
-              () => { responseDiv.innerHTML = "<span style='color:orange;'>已取消打卡</span>"; }
-            );
-          } else {
-            displayError(result.message, result.error);
-          }
-        }
-      } catch (err) {
-        displayError(`網路檢查失敗: ${err}`);
-      }
+      alert(`執行 ${action} 打卡（模擬成功）`);
     }
 
-    function startCountdown(action, force, bindDevice) {
-      overlay.classList.add("show");
-      let countdown = 5;
-      modalMessage.textContent = `將於 ${countdown} 秒後建立 ${action} 打卡`;
-      const timer = setInterval(() => {
-        countdown--;
-        modalMessage.textContent = `將於 ${countdown} 秒後建立 ${action} 打卡`;
-        if (countdown <= 0) {
-          clearInterval(timer);
-          overlay.classList.remove("show");
-          handleAction(action, force, bindDevice);
-        }
-      }, 1000);
-
-      cancelBtn.onclick = () => {
-        clearInterval(timer);
-        overlay.classList.remove("show");
-        responseDiv.innerHTML = "<span style='color:orange;'>已取消打卡</span>";
-      };
-      confirmBtn.onclick = () => {
-        clearInterval(timer);
-        overlay.classList.remove("show");
-        handleAction(action, force, bindDevice);
-      };
-    }
-
-    async function handleAction(action, force, bindDevice) {
-      const idCode = idInput.value;
-      responseDiv.innerHTML = "<span class='loading'>審核中｜請稍候...</span>";
-      responseDiv.classList.add("show");
-      try {
-        const coords = await new Promise((resolve, reject) => {
-          getLocation(resolve, reject);
-        });
-        const deviceInfo = JSON.stringify({
-          OS: navigator.platform,
-          Browser: navigator.userAgent
-        });
-        const uuid = getDeviceUUID();
-        const result = await callGAS("gpsCheckin", [idCode, deviceInfo, action, coords.lat, coords.lng, force, bindDevice, uuid]);
-        if (result.status === "success") {
-          let finalMsg = result.message;
-          if (result.detail && result.detail.time) {
-            finalMsg += `<br><span style='color:#fff;'>${result.detail.time}</span>`;
-          }
-          responseDiv.innerHTML = `<div style="color:green; font-weight:bold; text-align:center;">${finalMsg}</div>`;
-        } else if (result.status === "error") {
-          displayError(result.message, result.error);
-        } else {
-          displayError("未知的回傳狀態");
-        }
-      } catch (err) {
-        displayError(`連線失敗，請檢查網路: ${err}`);
-      }
-    }
-
-    function getLocation(successCallback, errorCallback) {
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            successCallback({ lat: position.coords.latitude, lng: position.coords.longitude });
-          },
-          (error) => {
-            errorCallback("定位失敗｜請開啟瀏覽器定位功能|重新整理");
-          },
-          { enableHighAccuracy: true, timeout: 10000 }
-        );
-      } else {
-        errorCallback("此瀏覽器不支援 Geolocation API");
-      }
-    }
-
-    async function testLocation() {
-      const now = Date.now();
-      if (now - lastTestLocationTime < COOLDOWN_MS) {
-        displayError("每10秒得測試一次");
-        return;
-      }
-      lastTestLocationTime = now;
-
-      const idCode = idInput.value;
-      responseDiv.innerHTML = "<span class='loading'>定位測試中｜請稍候...</span>";
-      responseDiv.classList.add("show");
-      if (!/^\d{4}$/.test(idCode)) {
-        displayError("請先輸入完整的身分證後四碼");
-        return;
-      }
-      if (!navigator.onLine) {
-        displayError("離線狀態無法測試定位");
-        return;
-      }
-      try {
-        const coords = await new Promise((resolve, reject) => {
-          getLocation(resolve, reject);
-        });
-        const result = await callGAS("testLocationWithAuth", [idCode, coords.lat, coords.lng]);
-        if (result.status === "success") {
-          responseDiv.innerHTML = result.html ? `<div class="table-responsive">${result.html}</div>` : "無資料";
-        } else {
-          displayError(result.message);
-        }
-      } catch (err) {
-        displayError(`測試定位失敗: ${err}`);
-      }
-    }
-
-    async function queryTodayRecords() {
-      const now = Date.now();
-      if (now - lastQueryTime < COOLDOWN_MS) {
-        displayError("每10秒得查詢一次");
-        return;
-      }
-      lastQueryTime = now;
-
-      const idCode = idInput.value;
-      responseDiv.innerHTML = "<span class='loading'>查詢中｜請稍候...</span>";
-      responseDiv.classList.add("show");
-      if (!/^\d{4}$/.test(idCode)) {
-        displayError("請先輸入完整的身分證後四碼");
-        return;
-      }
-      if (!navigator.onLine) {
-        displayError("離線狀態無法查詢");
-        return;
-      }
-      try {
-        const result = await callGAS("queryTodayRecords", [idCode]);
-        if (result.status === "success") {
-          const tableHTML = result.html ? `<div class="table-responsive">${result.html}</div>` : "無資料";
-          responseDiv.innerHTML = tableHTML;
-        } else {
-          displayError(result.message);
-        }
-      } catch (err) {
-        displayError(`查詢失敗: ${err}`);
-      }
-    }
-
-    document.getElementById("btnOn").addEventListener("click", () => { startClockAction("上班", false); });
-    document.getElementById("btnOff").addEventListener("click", () => { startClockAction("下班", false); });
-    document.getElementById("btnQuery").addEventListener("click", () => { queryTodayRecords(); });
-    document.getElementById("btnTest").addEventListener("click", () => { testLocation(); });
-
-    // 頁面載入時顯示無痕模式提示
-    window.onload = () => {
-      incognitoPrompt.style.display = "flex";
-    };
+    document.getElementById("btnOn").addEventListener("click", () => startClockAction("上班"));
+    document.getElementById("btnOff").addEventListener("click", () => startClockAction("下班"));
+    document.getElementById("btnQuery").addEventListener("click", () => alert("查詢記錄（模擬成功）"));
+    document.getElementById("btnTest").addEventListener("click", () => alert("測試定位（模擬成功）"));
   </script>
 </body>
 </html>
