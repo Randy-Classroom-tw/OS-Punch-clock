@@ -377,4 +377,470 @@
     
     <div class="btn-group">
       <button class="btn btn-on" id="btnOn">上班</button>
-      <button class="btn btn-off" id="btnOff">下班</button
+      <button class="btn btn-off" id="btnOff">下班</button>
+      <button class="btn btn-query" id="btnQuery">查詢記錄</button>
+      <button class="btn btn-test" id="btnTest">測試定位</button>
+    </div>
+    
+    <div id="response" role="status" aria-live="polite"></div>
+  </div>
+  
+  <!-- Modal 視窗 -->
+  <div id="overlay" class="overlay">
+    <div class="modal">
+      <h3 id="modal-title">提示</h3>
+      <p id="modal-message">提示訊息</p>
+      <div class="modal-buttons">
+        <button id="modal-confirm" class="btn btn-confirm">確定</button>
+        <button id="modal-cancel" class="btn btn-cancel">取消</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 無痕模式提示遮罩 -->
+  <div id="incognitoPrompt">
+    <div class="prompt-content">
+      <h2>系統提示</h2>
+      <p>請確保關閉無痕瀏覽器模式後再執行</p>
+      <div class="button-group">
+        <button id="confirmIncognito">我已確認關閉</button>
+        <button id="cancelIncognito">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 教學影片視窗 -->
+  <div id="videoTutorialModal">
+    <div class="video-content">
+      <button class="close-btn" id="closeVideoModal">×</button>
+      <video id="tutorialVideo" controls>
+        <source src="https://i.imgur.com/Wnemzxu.mp4" type="video/mp4">
+        您的瀏覽器不支援影片播放，請點此觀看：
+        <a href="https://i.imgur.com/Wnemzxu.mp4" target="_blank">https://i.imgur.com/Wnemzxu.mp4</a>
+      </video>
+      <div class="fallback-link" id="videoFallback">
+        <a href="https://i.imgur.com/Wnemzxu.mp4" target="_blank">無法播放影片？請點此觀看</a>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // 定義部署網址
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzDG6a-THkJtGHN8Vm816OdEgPG1bk8xObU3S3xwAKPJH_4anClLjxzw9FwItI52LeF/exec";
+
+    // 驗證身分證後四碼
+    function validateIdCode(idCode) {
+      if (!/^\d{4}$/.test(idCode)) {
+        displayError("請先輸入完整的身分證後四碼");
+        return false;
+      }
+      return true;
+    }
+
+    // IndexedDB 操作函式
+    function openDatabase() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open("deviceDB", 1);
+        request.onupgradeneeded = function(event) {
+          const db = event.target.result;
+          if (!db.objectStoreNames.contains("deviceStore")) {
+            db.createObjectStore("deviceStore", { keyPath: "key" });
+          }
+        };
+        request.onsuccess = function(event) {
+          resolve(event.target.result);
+        };
+        request.onerror = function(event) {
+          reject("IndexedDB 打開失敗：" + event.target.errorCode);
+        };
+      });
+    }
+
+    async function getFromIndexedDB(storeName, key) {
+      const db = await openDatabase();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([storeName], "readonly");
+        const store = transaction.objectStore(storeName);
+        const request = store.get(key);
+        request.onsuccess = function(event) {
+          resolve(event.target.result ? event.target.result.value : null);
+        };
+        request.onerror = function(event) {
+          reject("讀取 IndexedDB 失敗：" + event.target.errorCode);
+        };
+      });
+    }
+
+    async function saveToIndexedDB(storeName, key, value) {
+      const db = await openDatabase();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([storeName], "readwrite");
+        const store = transaction.objectStore(storeName);
+        const request = store.put({ key: key, value: value });
+        request.onsuccess = function() {
+          resolve(true);
+        };
+        request.onerror = function(event) {
+          reject("存入 IndexedDB 失敗：" + event.target.errorCode);
+        };
+      });
+    }
+
+    // 取得裝置 UUID
+    async function getDeviceUUID() {
+      let uuid = localStorage.getItem("deviceUUID");
+      if (!uuid) {
+        try {
+          uuid = await getFromIndexedDB("deviceStore", "uuid");
+        } catch (err) {
+          console.error(err);
+        }
+        if (!uuid) {
+          try {
+            const fp = await FingerprintJS.load().then(fp => fp.get());
+            uuid = fp.visitorId;
+            console.log("FingerprintJS 取得的 UUID：", uuid);
+          } catch (err) {
+            console.error("FingerprintJS 失敗，使用 crypto.randomUUID()：", err);
+            if (crypto && crypto.randomUUID) {
+              uuid = crypto.randomUUID();
+            } else {
+              uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random()*16|0, v = c === 'x' ? r : (r&0x3|0x8);
+                return v.toString(16);
+              });
+            }
+          }
+          localStorage.setItem("deviceUUID", uuid);
+          try {
+            await saveToIndexedDB("deviceStore", "uuid", uuid);
+          } catch (err) {
+            console.error(err);
+          }
+        }
+      }
+      return uuid;
+    }
+
+    // 變數與事件監聽
+    let lastTestLocationTime = 0;
+    let lastQueryTime = 0;
+    const COOLDOWN_MS = 10000;
+
+    const toggleBtn = document.getElementById("toggleBtn");
+    const idInput = document.getElementById("idCode");
+    const eyeIcon = document.getElementById("eyeIcon");
+    const responseDiv = document.getElementById("response");
+    const overlay = document.getElementById("overlay");
+    const modalMessage = document.getElementById("modal-message");
+    const confirmBtn = document.getElementById("modal-confirm");
+    const cancelBtn = document.getElementById("modal-cancel");
+
+    // 無痕模式提示
+    const incognitoPrompt = document.getElementById("incognitoPrompt");
+    const confirmIncognito = document.getElementById("confirmIncognito");
+    const cancelIncognito = document.getElementById("cancelIncognito");
+
+    confirmIncognito.addEventListener("click", () => {
+      incognitoPrompt.style.display = "none";
+    });
+    cancelIncognito.addEventListener("click", () => {
+      alert("您已取消，無法進入系統！");
+    });
+
+    // 教學影片視窗控制
+    const videoTutorialModal = document.getElementById("videoTutorialModal");
+    const closeVideoModal = document.getElementById("closeVideoModal");
+    const tutorialVideo = document.getElementById("tutorialVideo");
+    const videoFallback = document.getElementById("videoFallback");
+
+    function showVideoTutorialModal() {
+      videoTutorialModal.style.display = "flex";
+    }
+    function hideVideoTutorialModal() {
+      videoTutorialModal.style.display = "none";
+    }
+    closeVideoModal.addEventListener("click", hideVideoTutorialModal);
+    tutorialVideo.addEventListener("error", () => {
+      tutorialVideo.style.display = "none";
+      videoFallback.style.display = "block";
+    });
+
+    // 密碼顯示切換
+    toggleBtn.addEventListener("click", () => {
+      if (idInput.type === "password") {
+        idInput.type = "text";
+        eyeIcon.textContent = "visibility_off";
+      } else {
+        idInput.type = "password";
+        eyeIcon.textContent = "visibility";
+      }
+      idInput.focus(); // 保持焦點
+    });
+
+    // 輸入框限制
+    idInput.addEventListener("input", () => {
+      if (idInput.value && !/^\d*$/.test(idInput.value)) {
+        alert("請切換輸入法｜輸入正規四碼數字");
+        idInput.value = idInput.value.replace(/\D/g, "");
+      }
+      const pattern = /^\d{0,4}$/;
+      if (!pattern.test(idInput.value)) {
+        idInput.setCustomValidity("請輸入 0 到 4 個數字");
+      } else if (idInput.value.length !== 4) {
+        idInput.setCustomValidity("必須填寫完整 4 位數");
+      } else {
+        idInput.setCustomValidity("");
+      }
+    });
+
+    // 顯示錯誤訊息（新增重試按鈕）
+    function displayError(msg) {
+      responseDiv.innerHTML = `<div style="color:red; text-align:center;">${msg} <button onclick="location.reload()">重試</button></div>`;
+      responseDiv.classList.add("show");
+    }
+
+    // 檢測瀏覽器
+    function detectBrowser(userAgent) {
+      const ua = userAgent.toLowerCase();
+      if (ua.indexOf("edg/") > -1) return "Microsoft Edge";
+      else if (ua.indexOf("chrome/") > -1) return "Chrome";
+      else if (ua.indexOf("safari/") > -1 && ua.indexOf("chrome/") === -1) return "Safari";
+      else if (ua.indexOf("firefox/") > -1) return "Firefox";
+      return null;
+    }
+
+    // 呼叫 GAS API
+    function callGAS(functionName, parametersArray) {
+      const formData = new URLSearchParams();
+      formData.append("function", functionName);
+      formData.append("parameters", JSON.stringify(parametersArray));
+      return fetch(WEB_APP_URL, {
+        method: "POST",
+        mode: "cors",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formData
+      })
+      .then(res => {
+        if (!res.ok) throw new Error(`網路狀態異常, status=${res.status}, message=${res.statusText}`);
+        return res.json();
+      })
+      .catch(err => { throw new Error(`Fetch error: ${err}`); });
+    }
+
+    // 自訂確認視窗
+    function showCustomConfirm(message, onConfirm, onCancel) {
+      modalMessage.textContent = message;
+      overlay.classList.add("show");
+      confirmBtn.onclick = () => {
+        overlay.classList.remove("show");
+        if (onConfirm) onConfirm();
+      };
+      cancelBtn.onclick = () => {
+        overlay.classList.remove("show");
+        if (onCancel) onCancel();
+      };
+    }
+
+    // 開始打卡
+    async function startClockAction(action, force) {
+      const idCode = idInput.value;
+      responseDiv.innerHTML = "<span class='loading'>檢查中｜請稍候...</span>";
+      responseDiv.classList.add("show");
+
+      if (!validateIdCode(idCode)) return;
+      if (!navigator.onLine) {
+        displayError("請確認網路連線");
+        return;
+      }
+
+      const currentBrowser = detectBrowser(navigator.userAgent);
+      if (!currentBrowser) {
+        let errorMsg = "下列瀏覽器才允許綁定<br>Edge、Chrome、Safari、Firefox<br>";
+        errorMsg += "請查看 <a href='#' id='tutorialLink'> 【 教學影片 】</a>";
+        displayError(errorMsg);
+        // 使用事件委託改進
+        document.addEventListener("click", function handler(e) {
+          if (e.target.id === "tutorialLink") {
+            e.preventDefault();
+            showVideoTutorialModal();
+            document.removeEventListener("click", handler); // 移除監聽器避免重複綁定
+          }
+        });
+        return;
+      }
+
+      try {
+        const result = await callGAS("checkDeviceBinding", [idCode]);
+        if (result.status === "success") {
+          startCountdown(action, force, false);
+        } else if (result.status === "error") {
+          if (result.error === "NOT_BOUND") {
+            showCustomConfirm(
+              `是否同意綁定 ${currentBrowser}`,
+              () => { startCountdown(action, force, true); },
+              () => { responseDiv.innerHTML = "<span style='color:orange;'>已取消打卡</span>"; }
+            );
+          } else {
+            displayError(result.message);
+          }
+        }
+      } catch (err) {
+        displayError(`網路檢查失敗: ${err}`);
+        responseDiv.classList.remove("show"); // 修正錯誤處理
+      }
+    }
+
+    // 倒數計時
+    function startCountdown(action, force, bindDevice) {
+      overlay.classList.add("show");
+      let countdown = 5;
+      modalMessage.textContent = `將於 ${countdown} 秒後建立 ${action} 打卡`;
+      const timer = setInterval(() => {
+        countdown--;
+        modalMessage.textContent = `將於 ${countdown} 秒後建立 ${action} 打卡`;
+        if (countdown <= 0) {
+          clearInterval(timer);
+          overlay.classList.remove("show");
+          handleAction(action, force, bindDevice);
+        }
+      }, 1000);
+
+      cancelBtn.onclick = () => {
+        clearInterval(timer);
+        overlay.classList.remove("show");
+        responseDiv.innerHTML = "<span style='color:orange;'>已取消打卡</span>";
+      };
+      confirmBtn.onclick = () => {
+        clearInterval(timer);
+        overlay.classList.remove("show");
+        handleAction(action, force, bindDevice);
+      };
+    }
+
+    // 處理打卡
+    async function handleAction(action, force, bindDevice) {
+      const idCode = idInput.value;
+      responseDiv.innerHTML = "<span class='loading'>審核中｜請稍候...</span>";
+      responseDiv.classList.add("show");
+      try {
+        const coords = await new Promise((resolve, reject) => {
+          getLocation(resolve, reject);
+        });
+        const deviceInfo = JSON.stringify({
+          OS: navigator.platform,
+          Browser: navigator.userAgent
+        });
+        const uuid = await getDeviceUUID();
+        const result = await callGAS("gpsCheckin", [idCode, deviceInfo, action, coords.lat, coords.lng, force, bindDevice, uuid]);
+        if (result.status === "success") {
+          let finalMsg = result.message;
+          if (result.detail && result.detail.time) {
+            finalMsg += `<br><span style='color:#fff;'>${result.detail.time}</span>`;
+          }
+          responseDiv.innerHTML = `<div style="color:green; font-weight:bold; text-align:center;">${finalMsg}</div>`;
+        } else if (result.status === "error") {
+          displayError(result.message);
+        } else {
+          displayError("未知的回傳狀態");
+        }
+      } catch (err) {
+        displayError(`連線失敗，請檢查網路: ${err}`);
+        responseDiv.classList.remove("show"); // 修正錯誤處理
+      }
+    }
+
+    // 取得定位
+    function getLocation(successCallback, errorCallback) {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            successCallback({ lat: position.coords.latitude, lng: position.coords.longitude });
+          },
+          (error) => {
+            errorCallback("定位失敗｜請開啟瀏覽器定位功能|重新整理");
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      } else {
+        errorCallback("此瀏覽器不支援 Geolocation API");
+      }
+    }
+
+    // 測試定位
+    async function testLocation() {
+      const now = Date.now();
+      if (now - lastTestLocationTime < COOLDOWN_MS) {
+        displayError("每10秒得測試一次");
+        return;
+      }
+      lastTestLocationTime = now;
+
+      const idCode = idInput.value;
+      responseDiv.innerHTML = "<span class='loading'>定位測試中｜請稍候...</span>";
+      responseDiv.classList.add("show");
+      if (!validateIdCode(idCode)) return;
+      if (!navigator.onLine) {
+        displayError("離線狀態無法測試定位");
+        return;
+      }
+      try {
+        const coords = await new Promise((resolve, reject) => {
+          getLocation(resolve, reject);
+        });
+        const result = await callGAS("testLocationWithAuth", [idCode, coords.lat, coords.lng]);
+        if (result.status === "success") {
+          responseDiv.innerHTML = result.html ? `<div class="table-responsive">${result.html}</div>` : "無資料";
+        } else {
+          displayError(result.message);
+        }
+      } catch (err) {
+        displayError(`測試定位失敗: ${err}`);
+        responseDiv.classList.remove("show"); // 修正錯誤處理
+      }
+    }
+
+    // 查詢今日記錄
+    async function queryTodayRecords() {
+      const now = Date.now();
+      if (now - lastQueryTime < COOLDOWN_MS) {
+        displayError("每10秒得查詢一次");
+        return;
+      }
+      lastQueryTime = now;
+
+      const idCode = idInput.value;
+      responseDiv.innerHTML = "<span class='loading'>查詢中｜請稍候...</span>";
+      responseDiv.classList.add("show");
+      if (!validateIdCode(idCode)) return;
+      if (!navigator.onLine) {
+        displayError("離線狀態無法查詢");
+        return;
+      }
+      try {
+        const result = await callGAS("queryTodayRecords", [idCode]);
+        if (result.status === "success") {
+          const tableHTML = result.html ? `<div class="table-responsive">${result.html}</div>` : "無資料";
+          responseDiv.innerHTML = tableHTML;
+        } else {
+          displayError(result.message);
+        }
+      } catch (err) {
+        displayError(`查詢失敗: ${err}`);
+        responseDiv.classList.remove("show"); // 修正錯誤處理
+      }
+    }
+
+    // 按鈕事件綁定
+    document.getElementById("btnOn").addEventListener("click", () => { startClockAction("上班", false); });
+    document.getElementById("btnOff").addEventListener("click", () => { startClockAction("下班", false); });
+    document.getElementById("btnQuery").addEventListener("click", () => { queryTodayRecords(); });
+    document.getElementById("btnTest").addEventListener("click", () => { testLocation(); });
+
+    // 頁面載入時顯示無痕提示
+    window.onload = () => {
+      incognitoPrompt.style.display = "flex";
+    };
+  </script>
+</body>
+</html>
