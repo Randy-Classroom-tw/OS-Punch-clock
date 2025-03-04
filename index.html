@@ -425,7 +425,7 @@
   
   <script>
     // 定義部署網址，必須在最前面，確保全域可用
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzDG6a-THkJtGHN8Vm816OdEgPG1bk8xObU3S3xwAKPJH_4anClLjxzw9FwItI52LeF/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwDG3H75wlZsvt80Gu0-0WsaX6Igh4hBWEZENOfhsFATmys0--P_rSn_J1zaP2oehogIg/exec";
 
     // 驗證身分證後四碼
     function validateIdCode(idCode) {
@@ -485,14 +485,14 @@
       });
     }
 
-    // 取得裝置 UUID
+    // 檢查無痕模式並處理 UUID
     async function getDeviceUUID() {
       let uuid = localStorage.getItem("deviceUUID");
-      if (!uuid) {
+      if (!uuid || typeof localStorage === 'undefined') {
         try {
           uuid = await getFromIndexedDB("deviceStore", "uuid");
         } catch (err) {
-          console.error(err);
+          console.error("IndexedDB 錯誤:", err);
         }
         if (!uuid) {
           try {
@@ -505,16 +505,18 @@
               uuid = crypto.randomUUID();
             } else {
               uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                const r = Math.random()*16|0, v = c === 'x' ? r : (r&0x3|0x8);
+                const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
               });
             }
           }
-          localStorage.setItem("deviceUUID", uuid);
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem("deviceUUID", uuid);
+          }
           try {
             await saveToIndexedDB("deviceStore", "uuid", uuid);
           } catch (err) {
-            console.error(err);
+            console.error("IndexedDB 儲存失敗:", err);
           }
         }
       }
@@ -621,10 +623,13 @@
         body: formData
       })
       .then(res => {
-        if (!res.ok) throw new Error(`網路狀態異常, status=${res.status}, message=${res.statusText}`);
+        if (!res.ok) throw new Error(`網路錯誤: 狀態 ${res.status}, 訊息 ${res.statusText}`);
         return res.json();
       })
-      .catch(err => { throw new Error(`Fetch error: ${err}`); });
+      .catch(err => {
+        console.error("API 請求失敗:", err);
+        throw new Error(`連線失敗: ${err.message} (${err.name})`);
+      });
     }
 
     // 自訂確認視窗
@@ -655,7 +660,7 @@
 
       const currentBrowser = detectBrowser(navigator.userAgent);
       if (!currentBrowser) {
-        let errorMsg = "下列瀏覽器才允許綁定<br>Edge、Chrome、Safari、Firefox<br>";
+        let errorMsg = "下列瀏覽器才允許綁定:<br>Edge、Chrome、Safari、Firefox<br>";
         errorMsg += "請查看 <a href='#' id='tutorialLink'>【 教學影片 】</a>";
         displayError(errorMsg);
         document.addEventListener("click", function handler(e) {
@@ -683,11 +688,11 @@
               }
             );
           } else {
-            displayError(result.message);
+            displayError(result.message || "檢查裝置綁定失敗");
           }
         }
       } catch (err) {
-        displayError(`網路檢查失敗: ${err}`);
+        displayError(`網路檢查失敗: ${err.message} (${err.name})`);
         responseDiv.classList.remove("show");
       }
     }
@@ -741,12 +746,12 @@
           }
           responseDiv.innerHTML = `<div style="color:green; font-weight:bold; text-align:center;">${finalMsg}</div>`;
         } else if (result.status === "error") {
-          displayError(result.message || "發生未知錯誤");
+          displayError(result.message || "打卡失敗，請稍後重試");
         } else {
           displayError("未知的回傳狀態");
         }
       } catch (err) {
-        displayError(`連線失敗，請檢查網路: ${err.message || err}`);
+        displayError(`連線失敗，請檢查網路: ${err.message} (${err.name})`);
         responseDiv.classList.remove("show");
       }
     }
@@ -815,10 +820,10 @@
             ? `<div class="table-responsive">${result.html}</div>` 
             : "<span style='color:yellow;'>無資料</span>";
         } else {
-          displayError(result.message || "測試失敗");
+          displayError(result.message || "測試定位失敗，請稍後重試");
         }
       } catch (err) {
-        displayError(`測試定位失敗: ${err.message || err}`);
+        displayError(`測試定位失敗: ${err.message} (${err.name})`);
       }
     }
 
@@ -847,10 +852,10 @@
             : "無資料";
           responseDiv.innerHTML = tableHTML;
         } else {
-          displayError(result.message || "查詢失敗");
+          displayError(result.message || "查詢失敗，請稍後重試");
         }
       } catch (err) {
-        displayError(`查詢失敗: ${err.message || err}`);
+        displayError(`查詢失敗: ${err.message} (${err.name})`);
       }
     }
 
@@ -861,7 +866,14 @@
     document.getElementById("btnTest").addEventListener("click", () => { testLocation(); });
 
     window.onload = () => {
-      incognitoPrompt.style.display = "flex";
+      // 檢查無痕模式
+      if (navigator.userAgent.toLowerCase().indexOf('incognito') !== -1 || 
+          navigator.userAgent.toLowerCase().indexOf('private') !== -1 || 
+          (typeof document.hasStorageAccess === 'function' && !document.hasStorageAccess())) {
+        incognitoPrompt.style.display = "flex";
+      } else {
+        incognitoPrompt.style.display = "none";
+      }
     };
   </script>
 </body>
