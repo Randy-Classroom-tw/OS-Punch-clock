@@ -167,18 +167,17 @@
       transform: translateY(0);
     }
     #response table {
-      /* 確保表格在小螢幕上有足夠空間 */
       width: 100%;
       min-width: 400px;
       border-collapse: collapse;
       text-align: center;
       border: 1px solid #555;
-      font-size: 14px; /* 縮小字體 */
+      font-size: 14px;
     }
     #response th, #response td {
-      padding: 4px; /* 縮小 padding */
+      padding: 4px;
       border: 1px solid #666;
-      white-space: nowrap; /* 防止文字換行 */
+      white-space: nowrap;
     }
     .loading {
       font-size: 16px;
@@ -425,7 +424,7 @@
   </div>
   
   <script>
-    // 定義部署網址
+    // 定義部署網址，必須在最前面，確保全域可用
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzDG6a-THkJtGHN8Vm816OdEgPG1bk8xObU3S3xwAKPJH_4anClLjxzw9FwItI52LeF/exec";
 
     // 驗證身分證後四碼
@@ -575,7 +574,7 @@
         idInput.type = "password";
         eyeIcon.textContent = "visibility";
       }
-      idInput.focus(); // 保持焦點
+      idInput.focus();
     });
 
     // 輸入框限制
@@ -594,9 +593,9 @@
       }
     });
 
-    // 顯示錯誤訊息（新增重試按鈕）
+    // 顯示錯誤訊息（已移除重試按鈕）
     function displayError(msg) {
-      responseDiv.innerHTML = `<div style="color:red; text-align:center;">${msg} <button onclick="location.reload()">重試</button></div>`;
+      responseDiv.innerHTML = `<div style="color:red; text-align:center;">${msg}</div>`;
       responseDiv.classList.add("show");
     }
 
@@ -657,14 +656,13 @@
       const currentBrowser = detectBrowser(navigator.userAgent);
       if (!currentBrowser) {
         let errorMsg = "下列瀏覽器才允許綁定<br>Edge、Chrome、Safari、Firefox<br>";
-        errorMsg += "請查看 <a href='#' id='tutorialLink'> 【 教學影片 】</a>";
+        errorMsg += "請查看 <a href='#' id='tutorialLink'>【 教學影片 】</a>";
         displayError(errorMsg);
-        // 使用事件委託改進
         document.addEventListener("click", function handler(e) {
           if (e.target.id === "tutorialLink") {
             e.preventDefault();
             showVideoTutorialModal();
-            document.removeEventListener("click", handler); // 移除監聽器避免重複綁定
+            document.removeEventListener("click", handler);
           }
         });
         return;
@@ -687,7 +685,7 @@
         }
       } catch (err) {
         displayError(`網路檢查失敗: ${err}`);
-        responseDiv.classList.remove("show"); // 修正錯誤處理
+        responseDiv.classList.remove("show");
       }
     }
 
@@ -746,7 +744,7 @@
         }
       } catch (err) {
         displayError(`連線失敗，請檢查網路: ${err}`);
-        responseDiv.classList.remove("show"); // 修正錯誤處理
+        responseDiv.classList.remove("show");
       }
     }
 
@@ -790,13 +788,15 @@
         });
         const result = await callGAS("testLocationWithAuth", [idCode, coords.lat, coords.lng]);
         if (result.status === "success") {
-          responseDiv.innerHTML = result.html ? `<div class="table-responsive">${result.html}</div>` : "無資料";
+          responseDiv.innerHTML = result.html 
+            ? `<div class="table-responsive">${result.html}</div>` 
+            : "無資料";
         } else {
           displayError(result.message);
         }
       } catch (err) {
         displayError(`測試定位失敗: ${err}`);
-        responseDiv.classList.remove("show"); // 修正錯誤處理
+        responseDiv.classList.remove("show");
       }
     }
 
@@ -820,14 +820,16 @@
       try {
         const result = await callGAS("queryTodayRecords", [idCode]);
         if (result.status === "success") {
-          const tableHTML = result.html ? `<div class="table-responsive">${result.html}</div>` : "無資料";
+          const tableHTML = result.html 
+            ? `<div class="table-responsive">${result.html}</div>` 
+            : "無資料";
           responseDiv.innerHTML = tableHTML;
         } else {
           displayError(result.message);
         }
       } catch (err) {
         displayError(`查詢失敗: ${err}`);
-        responseDiv.classList.remove("show"); // 修正錯誤處理
+        responseDiv.classList.remove("show");
       }
     }
 
@@ -837,7 +839,6 @@
     document.getElementById("btnQuery").addEventListener("click", () => { queryTodayRecords(); });
     document.getElementById("btnTest").addEventListener("click", () => { testLocation(); });
 
-    // 頁面載入時顯示無痕提示
     window.onload = () => {
       incognitoPrompt.style.display = "flex";
     };
