@@ -677,7 +677,10 @@
             showCustomConfirm(
               `是否同意綁定 ${currentBrowser}`,
               () => { startCountdown(action, force, true); },
-              () => { responseDiv.innerHTML = "<span style='color:orange;'>已取消打卡</span>"; }
+              () => { 
+                responseDiv.innerHTML = "<span style='color:orange;'>已取消打卡，請重新綁定設備後再試</span>";
+                idInput.value = ""; // 清空輸入框
+              }
             );
           } else {
             displayError(result.message);
@@ -738,31 +741,51 @@
           }
           responseDiv.innerHTML = `<div style="color:green; font-weight:bold; text-align:center;">${finalMsg}</div>`;
         } else if (result.status === "error") {
-          displayError(result.message);
+          displayError(result.message || "發生未知錯誤");
         } else {
           displayError("未知的回傳狀態");
         }
       } catch (err) {
-        displayError(`連線失敗，請檢查網路: ${err}`);
+        displayError(`連線失敗，請檢查網路: ${err.message || err}`);
         responseDiv.classList.remove("show");
       }
     }
 
-    // 取得定位
+    // 取得定位（修正 Geolocation 檢查）
     function getLocation(successCallback, errorCallback) {
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            successCallback({ lat: position.coords.latitude, lng: position.coords.longitude });
-          },
-          (error) => {
-            errorCallback("定位失敗｜請開啟瀏覽器定位功能|重新整理");
-          },
-          { enableHighAccuracy: true, timeout: 10000 }
-        );
-      } else {
+      if (!("geolocation" in navigator)) {
         errorCallback("此瀏覽器不支援 Geolocation API");
+        return;
       }
+      navigator.permissions.query({ name: "geolocation" }).then((result) => {
+        if (result.state === "denied") {
+          errorCallback("定位權限被拒絕，請至瀏覽器設定開啟");
+        } else {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              successCallback({ lat: position.coords.latitude, lng: position.coords.longitude });
+            },
+            (error) => {
+              let msg = "定位失敗：";
+              switch (error.code) {
+                case error.PERMISSION_DENIED:
+                  msg += "請開啟定位權限";
+                  break;
+                case error.POSITION_UNAVAILABLE:
+                  msg += "無法取得位置資訊";
+                  break;
+                case error.TIMEOUT:
+                  msg += "定位超時，請稍後再試";
+                  break;
+                default:
+                  msg += "未知錯誤";
+              }
+              errorCallback(msg);
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+          );
+        }
+      });
     }
 
     // 測試定位
@@ -790,13 +813,12 @@
         if (result.status === "success") {
           responseDiv.innerHTML = result.html 
             ? `<div class="table-responsive">${result.html}</div>` 
-            : "無資料";
+            : "<span style='color:yellow;'>無資料</span>";
         } else {
-          displayError(result.message);
+          displayError(result.message || "測試失敗");
         }
       } catch (err) {
-        displayError(`測試定位失敗: ${err}`);
-        responseDiv.classList.remove("show");
+        displayError(`測試定位失敗: ${err.message || err}`);
       }
     }
 
@@ -825,11 +847,10 @@
             : "無資料";
           responseDiv.innerHTML = tableHTML;
         } else {
-          displayError(result.message);
+          displayError(result.message || "查詢失敗");
         }
       } catch (err) {
-        displayError(`查詢失敗: ${err}`);
-        responseDiv.classList.remove("show");
+        displayError(`查詢失敗: ${err.message || err}`);
       }
     }
 
