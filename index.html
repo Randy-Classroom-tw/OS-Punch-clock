@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>OS_Office_ANN</title>
+  <title>GD_Office_ANN</title>
   <!-- 修正 viewport 設置以適應行動裝置 -->
   <meta name="viewport" content="width=device-width, initial-scale=0.7, maximum-scale=1.0, user-scalable=no" />
   <link rel="icon" type="image/png" sizes="32x32" href="https://i.imgur.com/7obx0vd.jpg">
@@ -485,14 +485,14 @@
       });
     }
 
-    // 檢查無痕模式並處理 UUID
+    // 取得裝置 UUID
     async function getDeviceUUID() {
       let uuid = localStorage.getItem("deviceUUID");
-      if (!uuid || typeof localStorage === 'undefined') {
+      if (!uuid) {
         try {
           uuid = await getFromIndexedDB("deviceStore", "uuid");
         } catch (err) {
-          console.error("IndexedDB 錯誤:", err);
+          console.error(err);
         }
         if (!uuid) {
           try {
@@ -505,18 +505,16 @@
               uuid = crypto.randomUUID();
             } else {
               uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                const r = Math.random()*16|0, v = c === 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);
               });
             }
           }
-          if (typeof localStorage !== 'undefined') {
-            localStorage.setItem("deviceUUID", uuid);
-          }
+          localStorage.setItem("deviceUUID", uuid);
           try {
             await saveToIndexedDB("deviceStore", "uuid", uuid);
           } catch (err) {
-            console.error("IndexedDB 儲存失敗:", err);
+            console.error(err);
           }
         }
       }
@@ -623,13 +621,10 @@
         body: formData
       })
       .then(res => {
-        if (!res.ok) throw new Error(`網路錯誤: 狀態 ${res.status}, 訊息 ${res.statusText}`);
+        if (!res.ok) throw new Error(`網路狀態異常, status=${res.status}, message=${res.statusText}`);
         return res.json();
       })
-      .catch(err => {
-        console.error("API 請求失敗:", err);
-        throw new Error(`連線失敗: ${err.message} (${err.name})`);
-      });
+      .catch(err => { throw new Error(`Fetch error: ${err}`); });
     }
 
     // 自訂確認視窗
@@ -660,7 +655,7 @@
 
       const currentBrowser = detectBrowser(navigator.userAgent);
       if (!currentBrowser) {
-        let errorMsg = "下列瀏覽器才允許綁定:<br>Edge、Chrome、Safari、Firefox<br>";
+        let errorMsg = "下列瀏覽器才允許綁定<br>Edge、Chrome、Safari、Firefox<br>";
         errorMsg += "請查看 <a href='#' id='tutorialLink'>【 教學影片 】</a>";
         displayError(errorMsg);
         document.addEventListener("click", function handler(e) {
@@ -682,17 +677,14 @@
             showCustomConfirm(
               `是否同意綁定 ${currentBrowser}`,
               () => { startCountdown(action, force, true); },
-              () => { 
-                responseDiv.innerHTML = "<span style='color:orange;'>已取消打卡，請重新綁定設備後再試</span>";
-                idInput.value = ""; // 清空輸入框
-              }
+              () => { responseDiv.innerHTML = "<span style='color:orange;'>已取消打卡</span>"; }
             );
           } else {
-            displayError(result.message || "檢查裝置綁定失敗");
+            displayError(result.message);
           }
         }
       } catch (err) {
-        displayError(`網路檢查失敗: ${err.message} (${err.name})`);
+        displayError(`網路檢查失敗: ${err}`);
         responseDiv.classList.remove("show");
       }
     }
@@ -746,51 +738,31 @@
           }
           responseDiv.innerHTML = `<div style="color:green; font-weight:bold; text-align:center;">${finalMsg}</div>`;
         } else if (result.status === "error") {
-          displayError(result.message || "打卡失敗，請稍後重試");
+          displayError(result.message);
         } else {
           displayError("未知的回傳狀態");
         }
       } catch (err) {
-        displayError(`連線失敗，請檢查網路: ${err.message} (${err.name})`);
+        displayError(`連線失敗，請檢查網路: ${err}`);
         responseDiv.classList.remove("show");
       }
     }
 
-    // 取得定位（修正 Geolocation 檢查）
+    // 取得定位
     function getLocation(successCallback, errorCallback) {
-      if (!("geolocation" in navigator)) {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            successCallback({ lat: position.coords.latitude, lng: position.coords.longitude });
+          },
+          (error) => {
+            errorCallback("定位失敗｜請開啟瀏覽器定位功能|重新整理");
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      } else {
         errorCallback("此瀏覽器不支援 Geolocation API");
-        return;
       }
-      navigator.permissions.query({ name: "geolocation" }).then((result) => {
-        if (result.state === "denied") {
-          errorCallback("定位權限被拒絕，請至瀏覽器設定開啟");
-        } else {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              successCallback({ lat: position.coords.latitude, lng: position.coords.longitude });
-            },
-            (error) => {
-              let msg = "定位失敗：";
-              switch (error.code) {
-                case error.PERMISSION_DENIED:
-                  msg += "請開啟定位權限";
-                  break;
-                case error.POSITION_UNAVAILABLE:
-                  msg += "無法取得位置資訊";
-                  break;
-                case error.TIMEOUT:
-                  msg += "定位超時，請稍後再試";
-                  break;
-                default:
-                  msg += "未知錯誤";
-              }
-              errorCallback(msg);
-            },
-            { enableHighAccuracy: true, timeout: 10000 }
-          );
-        }
-      });
     }
 
     // 測試定位
@@ -818,12 +790,13 @@
         if (result.status === "success") {
           responseDiv.innerHTML = result.html 
             ? `<div class="table-responsive">${result.html}</div>` 
-            : "<span style='color:yellow;'>無資料</span>";
+            : "無資料";
         } else {
-          displayError(result.message || "測試定位失敗，請稍後重試");
+          displayError(result.message);
         }
       } catch (err) {
-        displayError(`測試定位失敗: ${err.message} (${err.name})`);
+        displayError(`測試定位失敗: ${err}`);
+        responseDiv.classList.remove("show");
       }
     }
 
@@ -852,10 +825,11 @@
             : "無資料";
           responseDiv.innerHTML = tableHTML;
         } else {
-          displayError(result.message || "查詢失敗，請稍後重試");
+          displayError(result.message);
         }
       } catch (err) {
-        displayError(`查詢失敗: ${err.message} (${err.name})`);
+        displayError(`查詢失敗: ${err}`);
+        responseDiv.classList.remove("show");
       }
     }
 
@@ -866,14 +840,7 @@
     document.getElementById("btnTest").addEventListener("click", () => { testLocation(); });
 
     window.onload = () => {
-      // 檢查無痕模式
-      if (navigator.userAgent.toLowerCase().indexOf('incognito') !== -1 || 
-          navigator.userAgent.toLowerCase().indexOf('private') !== -1 || 
-          (typeof document.hasStorageAccess === 'function' && !document.hasStorageAccess())) {
-        incognitoPrompt.style.display = "flex";
-      } else {
-        incognitoPrompt.style.display = "none";
-      }
+      incognitoPrompt.style.display = "flex";
     };
   </script>
 </body>
