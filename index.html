@@ -609,21 +609,22 @@
     // 檢測瀏覽器
     function detectBrowser(userAgent) {
       const ua = userAgent.toLowerCase();
-      console.log("User Agent:", userAgent); // 新增除錯訊息
-      // 先檢查 Edge，因為 Edge 也包含 "chrome" 字串
-      if (ua.indexOf("edg") > -1) {
+      console.log("User Agent:", userAgent); // 除錯訊息
+      
+      // 更新 Edge 檢測邏輯
+      if (ua.includes("edg/") || ua.includes("edge/")) {
         console.log("Detected: Microsoft Edge");
         return "Microsoft Edge";
       }
-      else if (ua.indexOf("chrome") > -1 && ua.indexOf("edg") === -1) {
+      else if (ua.includes("chrome") && !ua.includes("edg")) {
         console.log("Detected: Chrome");
         return "Chrome";
       }
-      else if (ua.indexOf("safari") > -1 && ua.indexOf("chrome") === -1) {
+      else if (ua.includes("safari") && !ua.includes("chrome")) {
         console.log("Detected: Safari");
         return "Safari";
       }
-      else if (ua.indexOf("firefox") > -1) {
+      else if (ua.includes("firefox")) {
         console.log("Detected: Firefox");
         return "Firefox";
       }
