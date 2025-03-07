@@ -498,45 +498,37 @@
           try {
             // 使用 FingerprintJS 作為主要識別方式
             const fp = await FingerprintJS.load().then(fp => fp.get());
+            const components = fp.components;
             
-            // 收集核心特徵（較穩定的特徵）
+            // 收集多重識別特徵
             const deviceFeatures = {
-              version: "1.0",  // 版本控制
-              fingerprint: fp.visitorId,  // 直接使用 FingerprintJS 的 visitorId
-              // 核心特徵（較穩定）
+              fingerprint: fp.visitorId,
+              userAgent: navigator.userAgent,
+              screenResolution: `${window.screen.width}x${window.screen.height}`,
+              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              language: navigator.language,
               platform: navigator.platform,
               hardwareConcurrency: navigator.hardwareConcurrency,
               deviceMemory: navigator.deviceMemory,
               maxTouchPoints: navigator.maxTouchPoints,
               colorDepth: window.screen.colorDepth,
               pixelRatio: window.devicePixelRatio,
-              // Safari 特定特徵
-              safariVersion: navigator.userAgent.match(/Version\/(\d+\.\d+)/)?.[1] || '',
-              webkitVersion: navigator.userAgent.match(/AppleWebKit\/(\d+\.\d+)/)?.[1] || '',
-              // 設備功能支援（較穩定）
-              deviceOrientation: window.DeviceOrientationEvent ? 'supported' : 'not_supported',
-              deviceMotion: window.DeviceMotionEvent ? 'supported' : 'not_supported',
-              // 基本設備資訊
-              userAgent: navigator.userAgent,
-              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-              language: navigator.language
+              doNotTrack: navigator.doNotTrack,
+              cookieEnabled: navigator.cookieEnabled,
+              webdriver: navigator.webdriver,
+              vendor: navigator.vendor,
+              plugins: Array.from(navigator.plugins).map(p => p.name).join(','),
+              mimeTypes: Array.from(navigator.mimeTypes).map(m => m.type).join(',')
             };
             
-            // 直接使用 FingerprintJS 的 visitorId
-            deviceId = fp.visitorId;
+            // 使用 SHA-256 雜湊多重特徵
+            const featuresString = JSON.stringify(deviceFeatures);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(featuresString));
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            deviceId = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             
             console.log("設備特徵：", deviceFeatures);
             console.log("生成的設備ID：", deviceId);
-            
-            // 持久化存儲
-            localStorage.setItem("deviceUUID", deviceId);
-            localStorage.setItem("deviceFeatures", JSON.stringify(deviceFeatures));
-            try {
-              await saveToIndexedDB("deviceStore", "uuid", deviceId);
-              await saveToIndexedDB("deviceStore", "features", JSON.stringify(deviceFeatures));
-            } catch (err) {
-              console.error("IndexedDB 儲存失敗：", err);
-            }
           } catch (err) {
             console.error("設備識別失敗，使用備用方案：", err);
             if (crypto && crypto.randomUUID) {
@@ -547,71 +539,18 @@
                 return v.toString(16);
               });
             }
-            
-            // 備用方案的持久化存儲
-            localStorage.setItem("deviceUUID", deviceId);
-            try {
-              await saveToIndexedDB("deviceStore", "uuid", deviceId);
-            } catch (err) {
-              console.error("IndexedDB 儲存失敗：", err);
-            }
+          }
+          
+          // 儲存到 localStorage 和 IndexedDB
+          localStorage.setItem("deviceUUID", deviceId);
+          try {
+            await saveToIndexedDB("deviceStore", "uuid", deviceId);
+          } catch (err) {
+            console.error("IndexedDB 儲存失敗：", err);
           }
         }
       }
       return deviceId;
-    }
-
-    // 取得裝置特徵
-    async function getDeviceFeatures() {
-      try {
-        // 使用 FingerprintJS 作為主要識別方式
-        const fp = await FingerprintJS.load().then(fp => fp.get());
-        
-        // 收集核心特徵（較穩定的特徵）
-        const deviceFeatures = {
-          version: "1.0",  // 版本控制
-          fingerprint: fp.visitorId,  // 直接使用 FingerprintJS 的 visitorId
-          // 核心特徵（較穩定）
-          platform: navigator.platform,
-          hardwareConcurrency: navigator.hardwareConcurrency,
-          deviceMemory: navigator.deviceMemory,
-          maxTouchPoints: navigator.maxTouchPoints,
-          colorDepth: window.screen.colorDepth,
-          pixelRatio: window.devicePixelRatio,
-          // Safari 特定特徵
-          safariVersion: navigator.userAgent.match(/Version\/(\d+\.\d+)/)?.[1] || '',
-          webkitVersion: navigator.userAgent.match(/AppleWebKit\/(\d+\.\d+)/)?.[1] || '',
-          // 設備功能支援（較穩定）
-          deviceOrientation: window.DeviceOrientationEvent ? 'supported' : 'not_supported',
-          deviceMotion: window.DeviceMotionEvent ? 'supported' : 'not_supported',
-          // 基本設備資訊
-          userAgent: navigator.userAgent,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          language: navigator.language
-        };
-        
-        // 直接使用 FingerprintJS 的 visitorId
-        const deviceId = fp.visitorId;
-        
-        console.log("設備特徵：", deviceFeatures);
-        console.log("生成的設備ID：", deviceId);
-        
-        // 持久化存儲
-        localStorage.setItem("deviceFeatures", JSON.stringify(deviceFeatures));
-        try {
-          await saveToIndexedDB("deviceStore", "features", JSON.stringify(deviceFeatures));
-        } catch (err) {
-          console.error("IndexedDB 儲存失敗：", err);
-        }
-        
-        return {
-          deviceId,
-          features: deviceFeatures
-        };
-      } catch (err) {
-        console.error("設備識別失敗：", err);
-        throw err;
-      }
     }
 
     // 變數與事件監聽
@@ -818,24 +757,20 @@
         const coords = await new Promise((resolve, reject) => {
           getLocation(resolve, reject);
         });
-
-        // 獲取設備特徵
-        const { deviceId, features } = await getDeviceFeatures();
-        
         const deviceInfo = JSON.stringify({
-          ...features,
-          // 螢幕資訊
-          ScreenOrientation: screen.orientation ? screen.orientation.type : 'unknown',
-          ScreenAvailWidth: screen.availWidth,
-          ScreenAvailHeight: screen.availHeight,
-          // 視窗資訊
-          InnerWidth: window.innerWidth,
-          InnerHeight: window.innerHeight,
-          OuterWidth: window.outerWidth,
-          OuterHeight: window.outerHeight
+          OS: navigator.platform,
+          Browser: navigator.userAgent,
+          ScreenResolution: `${window.screen.width}x${window.screen.height}`,
+          Timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          Language: navigator.language,
+          HardwareConcurrency: navigator.hardwareConcurrency,
+          DeviceMemory: navigator.deviceMemory,
+          MaxTouchPoints: navigator.maxTouchPoints,
+          ColorDepth: window.screen.colorDepth,
+          PixelRatio: window.devicePixelRatio
         });
-
-        const result = await callGAS("gpsCheckin", [idCode, deviceInfo, action, coords.lat, coords.lng, force, bindDevice, deviceId]);
+        const uuid = await getDeviceUUID();
+        const result = await callGAS("gpsCheckin", [idCode, deviceInfo, action, coords.lat, coords.lng, force, bindDevice, uuid]);
         if (result.status === "success") {
           let finalMsg = result.message;
           if (result.detail && result.detail.time) {
