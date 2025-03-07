@@ -485,72 +485,47 @@
       });
     }
 
-    // 取得裝置 UUID
-    async function getDeviceUUID() {
-      let deviceId = localStorage.getItem("deviceUUID");
-      if (!deviceId) {
+    // 移除 getDeviceUUID 函數，改為 getDeviceFeatures
+    async function getDeviceFeatures() {
+      let deviceFeatures = localStorage.getItem("deviceFeatures");
+
+      if (!deviceFeatures) {
         try {
-          deviceId = await getFromIndexedDB("deviceStore", "uuid");
+          // 使用 FingerprintJS 獲取更詳細的設備特徵
+          const fp = await FingerprintJS.load();
+          const result = await fp.get({ extendedResult: true });
+
+          // 收集穩定的硬體特徵
+          deviceFeatures = JSON.stringify({
+            OS: navigator.platform || "未知",
+            HardwareConcurrency: navigator.hardwareConcurrency || "未知",
+            DeviceMemory: navigator.deviceMemory || "未知",
+            ScreenResolution: `${window.screen.width}x${window.screen.height}`,
+            PixelRatio: window.devicePixelRatio || 1,
+            ColorDepth: window.screen.colorDepth || "未知",
+            MaxTouchPoints: navigator.maxTouchPoints || 0,
+            AudioCodecs: result.components.audioCodecs?.value || "未知",
+            VideoCodecs: result.components.videoCodecs?.value || "未知",
+            WebGLVendor: result.components.webglVendor?.value || "未知",
+            WebGLRenderer: result.components.webglRenderer?.value || "未知",
+            CanvasFingerprint: result.components.canvas?.value || "未知",
+            Fonts: result.components.fonts?.value.join(", ") || "未知"
+          });
+
+          // 儲存到 localStorage
+          localStorage.setItem("deviceFeatures", deviceFeatures);
         } catch (err) {
-          console.error(err);
-        }
-        if (!deviceId) {
-          try {
-            // 使用 FingerprintJS 作為主要識別方式
-            const fp = await FingerprintJS.load().then(fp => fp.get());
-            const components = fp.components;
-            
-            // 收集多重識別特徵
-            const deviceFeatures = {
-              fingerprint: fp.visitorId,
-              userAgent: navigator.userAgent,
-              screenResolution: `${window.screen.width}x${window.screen.height}`,
-              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-              language: navigator.language,
-              platform: navigator.platform,
-              hardwareConcurrency: navigator.hardwareConcurrency,
-              deviceMemory: navigator.deviceMemory,
-              maxTouchPoints: navigator.maxTouchPoints,
-              colorDepth: window.screen.colorDepth,
-              pixelRatio: window.devicePixelRatio,
-              doNotTrack: navigator.doNotTrack,
-              cookieEnabled: navigator.cookieEnabled,
-              webdriver: navigator.webdriver,
-              vendor: navigator.vendor,
-              plugins: Array.from(navigator.plugins).map(p => p.name).join(','),
-              mimeTypes: Array.from(navigator.mimeTypes).map(m => m.type).join(',')
-            };
-            
-            // 使用 SHA-256 雜湊多重特徵
-            const featuresString = JSON.stringify(deviceFeatures);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(featuresString));
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            deviceId = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            
-            console.log("設備特徵：", deviceFeatures);
-            console.log("生成的設備ID：", deviceId);
-          } catch (err) {
-            console.error("設備識別失敗，使用備用方案：", err);
-            if (crypto && crypto.randomUUID) {
-              deviceId = crypto.randomUUID();
-            } else {
-              deviceId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                const r = Math.random()*16|0, v = c === 'x' ? r : (r&0x3|0x8);
-                return v.toString(16);
-              });
-            }
-          }
-          
-          // 儲存到 localStorage 和 IndexedDB
-          localStorage.setItem("deviceUUID", deviceId);
-          try {
-            await saveToIndexedDB("deviceStore", "uuid", deviceId);
-          } catch (err) {
-            console.error("IndexedDB 儲存失敗：", err);
-          }
+          console.error("設備特徵收集失敗，使用備用方案：", err);
+          deviceFeatures = JSON.stringify({
+            OS: navigator.platform || "未知",
+            ScreenResolution: `${window.screen.width}x${window.screen.height}`,
+            PixelRatio: window.devicePixelRatio || 1
+          });
+          localStorage.setItem("deviceFeatures", deviceFeatures);
         }
       }
-      return deviceId;
+
+      return JSON.parse(deviceFeatures);
     }
 
     // 變數與事件監聽
@@ -753,24 +728,14 @@
       const idCode = idInput.value;
       responseDiv.innerHTML = "<span class='loading'>審核中｜請稍候...</span>";
       responseDiv.classList.add("show");
+
       try {
         const coords = await new Promise((resolve, reject) => {
           getLocation(resolve, reject);
         });
-        const deviceInfo = JSON.stringify({
-          OS: navigator.platform,
-          Browser: navigator.userAgent,
-          ScreenResolution: `${window.screen.width}x${window.screen.height}`,
-          Timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          Language: navigator.language,
-          HardwareConcurrency: navigator.hardwareConcurrency,
-          DeviceMemory: navigator.deviceMemory,
-          MaxTouchPoints: navigator.maxTouchPoints,
-          ColorDepth: window.screen.colorDepth,
-          PixelRatio: window.devicePixelRatio
-        });
-        const uuid = await getDeviceUUID();
-        const result = await callGAS("gpsCheckin", [idCode, deviceInfo, action, coords.lat, coords.lng, force, bindDevice, uuid]);
+        const features = await getDeviceFeatures();
+        const deviceInfo = JSON.stringify(features);
+        const result = await callGAS("gpsCheckin", [idCode, deviceInfo, action, coords.lat, coords.lng, force, bindDevice]);
         if (result.status === "success") {
           let finalMsg = result.message;
           if (result.detail && result.detail.time) {
@@ -778,7 +743,7 @@
           }
           responseDiv.innerHTML = `<div style="color:green; font-weight:bold; text-align:center;">${finalMsg}</div>`;
         } else if (result.status === "error") {
-          if (result.error === "DEVICE_UUID_MISMATCH" && result.details) {
+          if (result.error === "DEVICE_FEATURE_MISMATCH" && result.details) {
             // 處理設備不符的詳細錯誤
             let errorHtml = `<div style="color:red; text-align:left; padding:10px; background:rgba(255,0,0,0.1); border-radius:5px;">
               <div style="margin-bottom:10px; font-weight:bold;">打卡異常：裝置特徵不符</div>`;
