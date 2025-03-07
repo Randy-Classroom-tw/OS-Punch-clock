@@ -485,7 +485,7 @@
       });
     }
 
-    // 移除 getDeviceUUID 函數，改為 getDeviceFeatures
+    // 收集裝置特徵
     async function getDeviceFeatures() {
       let deviceFeatures = localStorage.getItem("deviceFeatures");
 
@@ -606,25 +606,21 @@
       responseDiv.classList.add("show");
     }
 
-    // 檢測瀏覽器
+    // 瀏覽器偵測函式（已改為包含 edgA/ edgi/ 等情況）
     function detectBrowser(userAgent) {
       const ua = userAgent.toLowerCase();
       console.log("User Agent:", userAgent); // 除錯訊息
       
-      // 更新 Edge 檢測邏輯
-      if (ua.includes("edg/") || ua.includes("edge/")) {
+      if (ua.includes("edg")) {
         console.log("Detected: Microsoft Edge");
         return "Microsoft Edge";
-      }
-      else if (ua.includes("chrome") && !ua.includes("edg")) {
+      } else if (ua.includes("chrome") && !ua.includes("edg")) {
         console.log("Detected: Chrome");
         return "Chrome";
-      }
-      else if (ua.includes("safari") && !ua.includes("chrome")) {
+      } else if (ua.includes("safari") && !ua.includes("chrome")) {
         console.log("Detected: Safari");
         return "Safari";
-      }
-      else if (ua.includes("firefox")) {
+      } else if (ua.includes("firefox")) {
         console.log("Detected: Firefox");
         return "Firefox";
       }
@@ -900,4 +896,4 @@
     };
   </script>
 </body>
-</html> 
+</html>
