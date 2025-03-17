@@ -4,11 +4,54 @@
   <meta charset="UTF-8" />
   <title>OS_Office_ANN</title>
   <meta name="viewport" content="width=device-width, initial-scale=0.7, maximum-scale=1.0, user-scalable=no" />
+  
+  <!-- 預加載關鍵資源 -->
+  <link rel="preload" href="https://fonts.googleapis.com/icon?family=Material+Icons" as="style">
+  <link rel="preload" href="https://i.imgur.com/7obx0vd.jpg" as="image" crossorigin="anonymous">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap" as="style">
+  
   <link rel="icon" type="image/png" sizes="32x32" href="https://i.imgur.com/7obx0vd.jpg">
   <link rel="apple-touch-icon" href="https://i.imgur.com/7obx0vd.jpg">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap">
+  
+  <!-- 關鍵CSS內聯，避免渲染阻塞 -->
   <style>
+    :root {
+      /* 系統主題色變量 */
+      --color-bg-primary: #1a1a1a;
+      --color-bg-secondary: rgba(20, 20, 20, 0.95);
+      --color-bg-tertiary: rgba(40, 40, 40, 0.8);
+      --color-text-primary: #e0e0e0;
+      --color-text-secondary: #bbb;
+      --color-text-success: #2ecc71;
+      --color-text-error: #e74c3c;
+      
+      /* 按鈕顏色變量 */
+      --btn-on-from: #28a745;
+      --btn-on-to: #1e7e34;
+      --btn-off-from: #e74c3c;
+      --btn-off-to: #c0392b;
+      --btn-query-from: #3498db;
+      --btn-query-to: #2980b9;
+      --btn-test-from: #f39c12;
+      --btn-test-to: #e67e22;
+      --btn-form-from: #9c27b0;
+      --btn-form-to: #673ab7;
+      --btn-disabled-from: #666;
+      --btn-disabled-to: #555;
+      
+      /* 間距與尺寸變量 */
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 20px;
+      --spacing-xl: 30px;
+      --border-radius-sm: 6px;
+      --border-radius-md: 10px;
+      --border-radius-lg: 12px;
+    }
+    
     input::-ms-reveal,
     input::-ms-clear { display: none !important; }
     input[type=password]::-webkit-textfield-decoration-container {
@@ -18,9 +61,9 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     body {
-      background: linear-gradient(145deg, #0a0a0a, #1a1a1a);
+      background: linear-gradient(145deg, #0a0a0a, var(--color-bg-primary));
       font-family: 'Roboto Mono', monospace;
-      color: #e0e0e0;
+      color: var(--color-text-primary);
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -30,9 +73,9 @@
       text-shadow: 1px 1px 2px #000;
     }
     .container {
-      background: rgba(20, 20, 20, 0.95);
+      background: var(--color-bg-secondary);
       border: 2px solid #333;
-      border-radius: 12px;
+      border-radius: var(--border-radius-lg);
       box-shadow: 0 8px 20px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.05);
       padding: 40px;
       max-width: 700px;
@@ -53,13 +96,13 @@
     }
     h2 {
       font-size: 20px;
-      color: #bbb;
+      color: var(--color-text-secondary);
       margin-bottom: 30px;
     }
     form {
-      background: rgba(40,40,40,0.8);
+      background: var(--color-bg-tertiary);
       border: 1px solid #333;
-      border-radius: 10px;
+      border-radius: var(--border-radius-md);
       padding: 20px;
       margin-bottom: 30px;
       box-shadow: inset 0 2px 8px rgba(0,0,0,0.7);
@@ -81,7 +124,7 @@
       font-size: 20px;
       padding: 14px 50px 14px 16px;
       border: none;
-      border-radius: 6px;
+      border-radius: var(--border-radius-sm);
       background-color: #222;
       color: #fff;
       text-align: center;
@@ -108,7 +151,7 @@
     .btn-group {
       display: flex;
       flex-wrap: wrap;
-      gap: 16px;
+      gap: var(--spacing-md);
       justify-content: center;
       margin-bottom: 20px;
     }
@@ -117,7 +160,7 @@
       padding: 12px;
       font-size: 18px;
       border: none;
-      border-radius: 8px;
+      border-radius: var(--border-radius-md);
       cursor: pointer;
       box-shadow: 0 4px 8px rgba(0,0,0,0.6), inset 0 -2px 0 rgba(0,0,0,0.2);
       color: #fff;
@@ -130,20 +173,19 @@
       opacity: 0.7;
       cursor: not-allowed;
       transform: none;
-      background: linear-gradient(to right, #666, #555);
+      background: linear-gradient(to right, var(--btn-disabled-from), var(--btn-disabled-to));
     }
-    .btn-on { background: linear-gradient(to right, #28a745 0%, #1e7e34 100%); }
-    .btn-off { background: linear-gradient(to right, #e74c3c 0%, #c0392b 100%); }
-    .btn-query { background: linear-gradient(to right, #3498db 0%, #2980b9 100%); }
-    .btn-test { background: linear-gradient(to right, #f39c12 0%, #e67e22 100%); }
-    /* 表單申請按鈕樣式 */
-    .btn-form { background: linear-gradient(to right, #9c27b0 0%, #673ab7 100%); }
+    .btn-on { background: linear-gradient(to right, var(--btn-on-from) 0%, var(--btn-on-to) 100%); }
+    .btn-off { background: linear-gradient(to right, var(--btn-off-from) 0%, var(--btn-off-to) 100%); }
+    .btn-query { background: linear-gradient(to right, var(--btn-query-from) 0%, var(--btn-query-to) 100%); }
+    .btn-test { background: linear-gradient(to right, var(--btn-test-from) 0%, var(--btn-test-to) 100%); }
+    .btn-form { background: linear-gradient(to right, var(--btn-form-from) 0%, var(--btn-form-to) 100%); }
     
     #response {
       margin-top: 10px;
       font-size: 16px;
       background: rgba(0,0,0,0.4);
-      border-radius: 6px;
+      border-radius: var(--border-radius-sm);
       padding: 10px;
       min-height: 40px;
       box-shadow: inset 0 1px 3px rgba(0,0,0,0.7);
@@ -203,7 +245,7 @@
     .modal {
       background: #222;
       padding: 24px;
-      border-radius: 10px;
+      border-radius: var(--border-radius-md);
       width: 90%;
       max-width: 400px;
       color: #fff;
@@ -227,7 +269,7 @@
     .modal .btn {
       flex: 1;
       padding: 10px;
-      border-radius: 6px;
+      border-radius: var(--border-radius-sm);
       font-size: 20px;
       font-family: 'Roboto Mono', monospace;
       cursor: pointer;
@@ -235,10 +277,10 @@
       box-shadow: none;
       border: none;
     }
-    .btn-confirm { background: #28a745; color: #fff; }
-    .btn-cancel { background: #e74c3c; color: #fff; }
-    .btn-confirm:hover { background: #1e7e34; }
-    .btn-cancel:hover { background: #c0392b; }
+    .btn-confirm { background: var(--btn-on-from); color: #fff; }
+    .btn-cancel { background: var(--btn-off-from); color: #fff; }
+    .btn-confirm:hover { background: var(--btn-on-to); }
+    .btn-cancel:hover { background: var(--btn-off-to); }
     #incognitoPrompt {
       position: fixed;
       top: 0; left: 0;
@@ -252,7 +294,7 @@
     #incognitoPrompt .prompt-content {
       background: #222;
       border: 2px solid #444;
-      border-radius: 10px;
+      border-radius: var(--border-radius-md);
       padding: 20px 30px;
       text-align: center;
       max-width: 450px;
@@ -270,7 +312,7 @@
     }
     #incognitoPrompt .button-group {
       display: flex;
-      gap: 16px;
+      gap: var(--spacing-md);
       justify-content: center;
     }
     #incognitoPrompt .button-group button {
@@ -280,14 +322,14 @@
       padding: 12px 20px;
       font-size: 16px;
       border: none;
-      border-radius: 6px;
+      border-radius: var(--border-radius-sm);
       cursor: pointer;
       transition: background 0.3s;
     }
-    #confirmIncognito { background-color: #28a745; color: #fff; }
-    #confirmIncognito:hover { background-color: #1e7e34; }
-    #cancelIncognito { background-color: #e74c3c; color: #fff; }
-    #cancelIncognito:hover { background-color: #c0392b; }
+    #confirmIncognito { background-color: var(--btn-on-from); color: #fff; }
+    #confirmIncognito:hover { background-color: var(--btn-on-to); }
+    #cancelIncognito { background-color: var(--btn-off-from); color: #fff; }
+    #cancelIncognito:hover { background-color: var(--btn-off-to); }
     #videoTutorialModal {
       position: fixed;
       top: 0; left: 0;
@@ -302,7 +344,7 @@
     #videoTutorialModal .video-content {
       background: #222;
       border: 2px solid #444;
-      border-radius: 10px;
+      border-radius: var(--border-radius-md);
       padding: 20px;
       text-align: center;
       max-width: 600px;
@@ -312,7 +354,7 @@
     #videoTutorialModal video {
       width: 100%;
       height: auto;
-      border-radius: 6px;
+      border-radius: var(--border-radius-sm);
     }
     #videoTutorialModal .fallback-link {
       display: none;
@@ -358,11 +400,11 @@
     }
     .error-message.show { display: block; opacity: 1; }
     .browser-notice {
-      padding: 8px 12px;
+      padding: var(--spacing-sm) var(--spacing-md);
       background-color: rgba(255, 193, 7, 0.2);
       border-left: 4px solid #ffc107;
       border-radius: 4px;
-      margin-bottom: 16px;
+      margin-bottom: var(--spacing-md);
       text-align: center;
       display: none;
     }
@@ -515,6 +557,26 @@
       backdrop-filter: blur(5px);
       -webkit-backdrop-filter: blur(5px);
     }
+    
+    /* 骨架屏動畫 */
+    @keyframes shimmer {
+      0% { background-position: -1000px 0; }
+      100% { background-position: 1000px 0; }
+    }
+    
+    .skeleton-loader {
+      background: linear-gradient(to right, #333 8%, #444 18%, #333 33%);
+      background-size: 1000px 100%;
+      animation: shimmer 2s infinite linear;
+      border-radius: 4px;
+    }
+    
+    /* 按鈕冷卻的CSS變量 */
+    .btn-cooldown {
+      --progress: 0%;
+      background-image: linear-gradient(to right, var(--color-from) 0%, var(--color-to) var(--progress), #666 var(--progress), #555 100%) !important;
+      transition: --progress 0.3s linear;
+    }
   </style>
 </head>
 <body>
@@ -542,7 +604,7 @@
           autocapitalize="off" 
           spellcheck="false"
         />
-        <button type="button" class="toggle-btn" id="toggleBtn">
+        <button type="button" class="toggle-btn" id="toggleBtn" aria-label="切換密碼顯示">
           <span class="material-icons" id="eyeIcon">visibility</span>
         </button>
         <span class="error-message"></span>
@@ -557,6 +619,7 @@
     </div>
     <div id="response" role="status" aria-live="polite"></div>
   </div>
+  
   <div id="overlay" class="overlay">
     <div class="modal">
       <h3 id="modal-title">提示</h3>
@@ -567,6 +630,7 @@
       </div>
     </div>
   </div>
+  
   <div id="incognitoPrompt">
     <div class="prompt-content">
       <h2>系統提示</h2>
@@ -577,6 +641,7 @@
       </div>
     </div>
   </div>
+  
   <div id="videoTutorialModal">
     <div class="video-content">
       <button class="close-btn" id="closeVideoModal">×</button>
@@ -644,272 +709,97 @@
       </div>
     </div>
   </div>
-  
-  <script>
-    // 確保 JavaScript 啟用提示
-    if (typeof window === 'undefined' || !window.document) {
-      document.body.innerHTML = '<p style="color: red; text-align: center;">請啟用 JavaScript 以使用此應用程式。</p>';
+
+<script>
+  /**
+   * @fileoverview OS辦公室出勤系統前端腳本 (完整版本)
+   * @version 1.0.6
+   * @author OS系統團隊
+   */
+
+  /* ====================================
+     1) 先宣告 (函式、工具、模組)
+  =====================================*/
+
+  /**
+   * 防抖動函數
+   */
+  function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+  }
+
+  /**
+   * 檢查 4 位數字
+   */
+  function validateIdCode(idCode) {
+    return /^\d{4}$/.test(idCode);
+  }
+
+  /**
+   * 按鈕狀態管理器
+   */
+  const ButtonStateManager = {
+    // 追蹤正在冷卻中的按鈕
+    coolingButtons: new Set(),
+    
+    // 追蹤操作狀態
+    operationInProgress: false,
+    
+    // 將按鈕添加到冷卻集合
+    addToCooling: function(buttonId) {
+      this.coolingButtons.add(buttonId);
+    },
+    
+    // 從冷卻集合中移除按鈕
+    removeFromCooling: function(buttonId) {
+      this.coolingButtons.delete(buttonId);
+    },
+    
+    // 檢查按鈕是否正在冷卻
+    isButtonCooling: function(buttonId) {
+      return this.coolingButtons.has(buttonId);
+    },
+    
+    // 設置操作狀態
+    setOperationStatus: function(inProgress) {
+      this.operationInProgress = inProgress;
+    },
+    
+    // 重置所有狀態（緊急情況使用）
+    resetAll: function() {
+      this.coolingButtons.clear();
+      this.operationInProgress = false;
     }
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz76tporyDWPW1TvwhCk2rVtnph1wRsNoC7k8Q402VYoZhV6ysp_DgIcVKP6pJLQauYVQ/exec";
-    const COOLDOWN_MS = 5000;
-    const CONSISTENCY_CHECK_INTERVAL = 30000;
-    const elements = {
-      toggleBtn: document.getElementById("toggleBtn"),
-      idInput: document.getElementById("idCode"),
-      eyeIcon: document.getElementById("eyeIcon"),
-      responseDiv: document.getElementById("response"),
-      overlay: document.getElementById("overlay"),
-      modalTitle: document.getElementById("modal-title"),
-      modalMessage: document.getElementById("modal-message"),
-      confirmBtn: document.getElementById("modal-confirm"),
-      cancelBtn: document.getElementById("modal-cancel"),
-      incognitoPrompt: document.getElementById("incognitoPrompt"),
-      confirmIncognito: document.getElementById("confirmIncognito"),
-      cancelIncognito: document.getElementById("cancelIncognito"),
-      videoTutorialModal: document.getElementById("videoTutorialModal"),
-      closeVideoModal: document.getElementById("closeVideoModal"),
-      tutorialVideo: document.getElementById("tutorialVideo"),
-      videoFallback: document.getElementById("videoFallback"),
-      networkStatus: document.getElementById("networkStatus"),
-      errorSpan: document.querySelector(".error-message"),
-      safariNotice: document.getElementById("safariNotice"),
-      allButtons: {
-        btnOn: document.getElementById("btnOn"),
-        btnOff: document.getElementById("btnOff"),
-        btnQuery: document.getElementById("btnQuery"),
-        btnTest: document.getElementById("btnTest")
-      }
-    };
-    const originalButtonStyles = {
-      btnOn: 'linear-gradient(to right, #28a745 0%, #1e7e34 100%)',
-      btnOff: 'linear-gradient(to right, #e74c3c 0%, #c0392b 100%)',
-      btnQuery: 'linear-gradient(to right, #3498db 0%, #2980b9 100%)',
-      btnTest: 'linear-gradient(to right, #f39c12 0%, #e67e22 100%)'
-    };
-    const DEVICE_ID_KEY = 'OS_DEVICE_ID';
-    const APP_VERSION = '1.0.1';
-    // 檢查是否為 Safari 瀏覽器
-    function isSafari() {
+  };
+
+  /**
+   * 瀏覽器相關工具
+   */
+  const BrowserUtils = {
+    isSafari: () => {
       const ua = navigator.userAgent.toLowerCase();
       return /safari/.test(ua) && !/chrome/.test(ua);
-    }
-    // 顯示 Safari 瀏覽器提示
-    function showSafariNotice() {
-      if (isSafari()) {
+    },
+    showSafariNotice: () => {
+      if (BrowserUtils.isSafari()) {
         elements.safariNotice.classList.add('show');
       }
-    }
-    // 取得或設置 Cookie
-    function getCookie(name) {
-      const nameEQ = name + "=";
-      const ca = document.cookie.split(';');
-      for (let i = 0; i < ca.length; i++) {
-        let c = ca[i].trim();
-        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-      }
-      return null;
-    }
-    function setCookie(name, value, days) {
-      try {
-        const date = new Date();
-        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-        const expires = "expires=" + date.toUTCString();
-        document.cookie = name + "=" + value + ";" + expires + ";path=/;SameSite=Strict";
-        return true;
-      } catch (e) {
-        console.error("設置 Cookie 失敗:", e);
-        return false;
-      }
-    }
-    // 生成備用識別碼
-    function generateFallbackID() {
-      if (crypto && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
-      return 'xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx'.replace(/[xy]/g, c => {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-      });
-    }
-    // 多重儲存設備識別碼
-    function saveDeviceID(deviceID) {
-      if (!deviceID) {
-        console.error("嘗試儲存空的設備識別碼");
-        return false;
-      }
-      let successCount = 0;
-      try {
-        localStorage.setItem(DEVICE_ID_KEY, deviceID);
-        localStorage.setItem(DEVICE_ID_KEY + '_timestamp', Date.now().toString());
-        localStorage.setItem(DEVICE_ID_KEY + '_version', APP_VERSION);
-        successCount++;
-      } catch (e) {
-        console.warn("無法儲存到 localStorage:", e);
-      }
-      try {
-        sessionStorage.setItem(DEVICE_ID_KEY, deviceID);
-        sessionStorage.setItem(DEVICE_ID_KEY + '_timestamp', Date.now().toString());
-        successCount++;
-      } catch (e) {
-        console.warn("無法儲存到 sessionStorage:", e);
-      }
-      if (setCookie(DEVICE_ID_KEY, deviceID, 365)) successCount++;
-      return successCount > 0;
-    }
-    // 驗證並糾正已儲存的識別碼
-    function validateStoredIDs() {
-      const localID = localStorage.getItem(DEVICE_ID_KEY);
-      const sessionID = sessionStorage.getItem(DEVICE_ID_KEY);
-      const cookieID = getCookie(DEVICE_ID_KEY);
-      let primaryID = null;
-      let needsRepair = false;
-      if (localID) {
-        primaryID = localID;
-        const storedVersion = localStorage.getItem(DEVICE_ID_KEY + '_version');
-        if (storedVersion !== APP_VERSION) {
-          localStorage.setItem(DEVICE_ID_KEY + '_version', APP_VERSION);
-        }
-      } else if (cookieID) {
-        primaryID = cookieID;
-        needsRepair = true;
-      } else if (sessionID) {
-        primaryID = sessionID;
-        needsRepair = true;
-      }
-      if (primaryID && (primaryID !== localID || primaryID !== sessionID || primaryID !== cookieID)) needsRepair = true;
-      if (primaryID && needsRepair) {
-        console.log("檢測到識別碼不一致，正在修復...");
-        saveDeviceID(primaryID);
-        return true;
-      }
-      return false;
-    }
-    // 取得裝置識別碼
-    async function getDeviceUUID() {
-      const storedID = localStorage.getItem(DEVICE_ID_KEY) || sessionStorage.getItem(DEVICE_ID_KEY) || getCookie(DEVICE_ID_KEY);
-      if (storedID) {
-        validateStoredIDs();
-        return storedID;
-      }
-      try {
-        const stableFeatures = [
-          navigator.platform || '',
-          screen.width + 'x' + screen.height,
-          navigator.language || '',
-          screen.colorDepth || 0,
-          navigator.userAgent.substring(0, 100)
-        ];
-        if (!isSafari()) {
-          stableFeatures.push(navigator.hardwareConcurrency || 0);
-          stableFeatures.push(window.devicePixelRatio || 0);
-          stableFeatures.push(getWebGLFingerprint());
-        }
-        const ip = await getIPAddress().catch(() => 'unknown');
-        stableFeatures.push(ip);
-        const deviceFingerprint = stableFeatures.join('|');
-        const newID = await hashString(deviceFingerprint).catch(() => generateFallbackID());
-        saveDeviceID(newID);
-        return newID;
-      } catch (err) {
-        console.error("生成設備識別碼失敗:", err);
-        const fallbackID = generateFallbackID();
-        saveDeviceID(fallbackID);
-        return fallbackID;
-      }
-    }
-    // 網路狀態監控
-    function updateNetworkStatus() {
-      if (navigator.onLine) {
-        elements.networkStatus.textContent = "已連線";
-        elements.networkStatus.className = "network-status network-online";
-      } else {
-        elements.networkStatus.textContent = "離線";
-        elements.networkStatus.className = "network-status network-offline";
-        displayError("網路連線已中斷");
-      }
-    }
-    window.addEventListener('online', updateNetworkStatus);
-    window.addEventListener('offline', updateNetworkStatus);
-    // 防抖動函數
-    function debounce(func, wait) {
-      let timeout;
-      return function (...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(this, args), wait);
-      };
-    }
-    // 按鈕控制
-    function disableAllButtons() {
-      Object.values(elements.allButtons).forEach(button => {
-        button.disabled = true;
-        button.style.background = 'linear-gradient(to right, #666, #555)';
-      });
-    }
-    function enableAllButtons() {
-      Object.values(elements.allButtons).forEach(button => {
-        button.disabled = false;
-        button.style.background = originalButtonStyles[button.id];
-      });
-    }
-    function enableAllButtonsExcept(buttonToExclude) {
-      Object.values(elements.allButtons).forEach(button => {
-        if (button.id !== buttonToExclude.id) {
-          button.disabled = false;
-          button.style.background = originalButtonStyles[button.id];
-        }
-      });
-    }
-    function startIndividualCooldown(button, duration, originalText) {
-      button.disabled = true;
-      button.textContent = originalText;
-      const originalColors = originalButtonStyles[button.id].match(/#\w+/g);
-      const grayColor = '#666';
-      let startTime = null;
-      function step(timestamp) {
-        if (!startTime) startTime = timestamp;
-        const progress = (timestamp - startTime) / duration;
-        const fillPercent = Math.min(progress * 100, 100);
-        if (progress < 1) {
-          button.style.background = `linear-gradient(to right, ${originalColors[0]} 0%, ${originalColors[1]} ${fillPercent}%, ${grayColor} ${fillPercent}%, ${grayColor} 100%)`;
-          requestAnimationFrame(step);
-        } else {
-          button.style.background = originalButtonStyles[button.id];
-          button.disabled = false;
-        }
-      }
-      button.style.background = `linear-gradient(to right, ${grayColor}, ${grayColor})`;
-      requestAnimationFrame(step);
-    }
-    // 雜湊函數
-    async function hashString(str) {
-      try {
-        if (!str) throw new Error("無法雜湊空字串");
-        const encoder = new TextEncoder();
-        const data = encoder.encode(str);
-        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-      } catch (err) {
-        console.error("雜湊函數失敗:", err);
-        return generateFallbackID();
-      }
-    }
-    // 獲取 IP 地址
-    async function getIPAddress() {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
-        const response = await fetch('https://api.ipify.org?format=json', { signal: controller.signal });
-        clearTimeout(timeoutId);
-        if (!response.ok) throw new Error(`網路錯誤: ${response.status}`);
-        const data = await response.json();
-        return data.ip;
-      } catch (err) {
-        console.error("無法獲取 IP:", err);
-        return 'unknown';
-      }
-    }
-    // 獲取 WebGL 指紋
-    function getWebGLFingerprint() {
+    },
+    parseBrowser: (userAgent) => {
+      const ua = userAgent.toLowerCase();
+      if (/edg\//.test(ua)) return "Edge";
+      if (/chrome\//.test(ua)) return "Chrome";
+      if (/safari\//.test(ua) && !/chrome\//.test(ua)) return "Safari";
+      if (/firefox\//.test(ua)) return "Firefox";
+      if (/opera\//.test(ua) || /opr\//.test(ua)) return "Opera";
+      if (/trident\//.test(ua)) return "Internet Explorer";
+      return "未知瀏覽器";
+    },
+    getWebGLFingerprint: () => {
       try {
         const canvas = document.createElement('canvas');
         const gl = canvas.getContext('webgl');
@@ -925,154 +815,12 @@
         console.error("WebGL 指紋失敗:", err);
         return 'WebGL error';
       }
-    }
-    // 輸入驗證
-    function validateIdCode(idCode) {
-      return /^\d{4}$/.test(idCode);
-    }
-    // 顯示回應
-    function displayError(msg) {
-      elements.responseDiv.innerHTML = `<div style="color:red; text-align:center;">${msg}</div>`;
-      elements.responseDiv.classList.add("show");
-    }
-    function displaySuccess(msg) {
-      elements.responseDiv.innerHTML = `<div style="color:green; font-weight:bold; text-align:center;">${msg}</div>`;
-      elements.responseDiv.classList.add("show");
-    }
-    function displayLoading(msg) {
-      elements.responseDiv.innerHTML = `<span class="loading">${msg || "載入中｜請稍候..."}</span>`;
-      elements.responseDiv.classList.add("show");
-    }
-    function clearResponse() {
-      elements.responseDiv.innerHTML = "";
-      elements.responseDiv.classList.remove("show");
-    }
-    // 瀏覽器檢測
-    function parseBrowser(userAgent) {
-      const ua = userAgent.toLowerCase();
-      if (/edg\//.test(ua)) return "Edge";
-      if (/chrome\//.test(ua)) return "Chrome";
-      if (/safari\//.test(ua) && !/chrome\//.test(ua)) return "Safari";
-      if (/firefox\//.test(ua)) return "Firefox";
-      if (/opera\//.test(ua) || /opr\//.test(ua)) return "Opera";
-      if (/trident\//.test(ua)) return "Internet Explorer";
-      return "未知瀏覽器";
-    }
-    // 伺服器通訊
-    async function callGAS(functionName, parametersArray) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
-        const formData = new URLSearchParams();
-        formData.append("function", functionName);
-        formData.append("parameters", JSON.stringify(parametersArray));
-        const response = await fetch(WEB_APP_URL, {
-          method: "POST",
-          mode: "cors",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: formData,
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        if (!response.ok) throw new Error(`網路錯誤: ${response.status}`);
-        return await response.json();
-      } catch (err) {
-        if (err.name === 'AbortError') throw new Error('請求超時｜請稍後再試');
-        throw new Error(`請求失敗: ${err.message}`);
-      }
-    }
-    // 對話框顯示
-    function showCustomConfirm(title, message, onConfirm, onCancel) {
-      elements.modalTitle.textContent = title || "提示";
-      elements.modalMessage.textContent = message;
-      elements.overlay.classList.add("show");
-      elements.confirmBtn.onclick = () => {
-        elements.overlay.classList.remove("show");
-        if (onConfirm) onConfirm();
-      };
-      elements.cancelBtn.onclick = () => {
-        elements.overlay.classList.remove("show");
-        if (onCancel) onCancel();
-      };
-    }
-    // 打卡流程
-    async function startClockAction(action, force, button) {
-      disableAllButtons();
-      const idCode = elements.idInput.value;
-      if (!validateIdCode(idCode)) {
-        displayError("請輸入完整的身分證後四碼");
-        startIndividualCooldown(button, COOLDOWN_MS, button.dataset.originalText);
-        enableAllButtonsExcept(button);
-        return;
-      }
-      if (!navigator.onLine) {
-        displayError("請確認網路連線");
-        startIndividualCooldown(button, COOLDOWN_MS, button.dataset.originalText);
-        enableAllButtonsExcept(button);
-        return;
-      }
-      displayLoading("檢查中｜請稍候...");
-      try {
-        const result = await callGAS("checkDeviceBinding", [idCode]);
-        if (result.status === "success") {
-          startCountdown(action, force, false, button);
-        } else if (result.status === "error") {
-          if (result.error === "NOT_BOUND") {
-            const browser = parseBrowser(navigator.userAgent);
-            showCustomConfirm(
-              "裝置綁定確認",
-              `是否同意綁定 ${browser}`,
-              () => startCountdown(action, force, true, button),
-              () => {
-                displayError("已取消打卡");
-                startIndividualCooldown(button, COOLDOWN_MS, button.dataset.originalText);
-                enableAllButtonsExcept(button);
-              }
-            );
-          } else {
-            displayError(result.message);
-            startIndividualCooldown(button, COOLDOWN_MS, button.dataset.originalText);
-            enableAllButtonsExcept(button);
-          }
-        }
-      } catch (err) {
-        displayError(`檢查失敗: ${err.message}`);
-        startIndividualCooldown(button, COOLDOWN_MS, button.dataset.originalText);
-        enableAllButtonsExcept(button);
-      }
-    }
-    // 倒數函數
-    function startCountdown(action, force, bindDevice, button) {
-      disableAllButtons();
-      elements.overlay.classList.add("show");
-      elements.modalTitle.textContent = "打卡確認";
-      let countdown = 5;
-      elements.modalMessage.textContent = `將於 ${countdown} 秒後建立 ${action} 打卡`;
-      const timer = setInterval(() => {
-        countdown--;
-        elements.modalMessage.textContent = `將於 ${countdown} 秒後建立 ${action} 打卡`;
-        if (countdown <= 0) {
-          clearInterval(timer);
-          elements.overlay.classList.remove("show");
-          handleAction(action, force, bindDevice, button);
-        }
-      }, 1000);
-      elements.confirmBtn.onclick = () => {
-        clearInterval(timer);
-        elements.overlay.classList.remove("show");
-        handleAction(action, force, bindDevice, button);
-      };
-      elements.cancelBtn.onclick = () => {
-        clearInterval(timer);
-        elements.overlay.classList.remove("show");
-        displayError("已取消打卡");
-        startIndividualCooldown(button, COOLDOWN_MS, button.dataset.originalText);
-        enableAllButtonsExcept(button);
-      };
-    }
-    // 字體檢測
-    function detectCommonFonts() {
-      const fontList = ['Arial', 'Times New Roman', 'Courier New', 'Georgia', 'Verdana', 'Helvetica', 'Tahoma', 'Trebuchet MS'];
+    },
+    detectCommonFonts: () => {
+      const fontList = [
+        'Arial','Times New Roman','Courier New','Georgia',
+        'Verdana','Helvetica','Tahoma','Trebuchet MS'
+      ];
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
       if (!context) return "canvas_unsupported";
@@ -1085,292 +833,928 @@
       });
       return detectedFonts.length > 0 ? detectedFonts.join('|').substring(0, 100) : "no_fonts_detected";
     }
-    // 處理打卡動作
-    async function handleAction(action, force, bindDevice, button) {
-      disableAllButtons();
-      const idCode = elements.idInput.value;
-      displayLoading("審核中｜請稍候...");
+  };
+
+  /**
+   * 儲存相關工具
+   */
+  const StorageUtils = {
+    getCookie: (name) => {
+      const nameEQ = name + "=";
+      const ca = document.cookie.split(';');
+      for (let i=0; i<ca.length; i++) {
+        let c = ca[i].trim();
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length);
+      }
+      return null;
+    },
+    setCookie: (name, value, days) => {
       try {
-        const coords = await new Promise((resolve, reject) => getLocation(resolve, reject));
-        const coordsList = [{ lat: coords.lat, lng: coords.lng }];
-        const deviceInfo = JSON.stringify({
-          OS: navigator.platform || "未知",
-          Browser: navigator.userAgent || "未知",
-          ScreenResolution: `${window.screen.width}x${window.screen.height}`,
-          TimeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "未知",
-          Language: navigator.language || "未知",
-          HardwareConcurrency: navigator.hardwareConcurrency || 0,
-          DeviceMemory: navigator.deviceMemory || 0,
-          MaxTouchPoints: navigator.maxTouchPoints || 0,
-          ColorDepth: window.screen.colorDepth || 24,
-          PixelRatio: window.devicePixelRatio || 1,
-          IsSafari: isSafari(),
-          TouchSupport: ('ontouchstart' in window) || (navigator.maxTouchPoints > 0),
-          AvailScreen: `${window.screen.availWidth}x${window.screen.availHeight}`,
-          Fonts: detectCommonFonts(),
-          AppVersion: APP_VERSION
-        });
-        const currentDeviceInfo = JSON.stringify({
-          Browser: navigator.userAgent || "未知",
-          DeviceMemory: navigator.deviceMemory || 0,
-          PixelRatio: window.devicePixelRatio || 1,
-          ColorDepth: window.screen.colorDepth || 24,
-          OS: navigator.platform || "未知",
-          ScreenResolution: `${window.screen.width}x${window.screen.height}`,
-          Language: navigator.language || "未知",
-          IsSafari: isSafari(),
-          TimeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "未知",
-          TouchSupport: ('ontouchstart' in window) || (navigator.maxTouchPoints > 0),
-          AvailScreen: `${window.screen.availWidth}x${window.screen.availHeight}`,
-          Fonts: detectCommonFonts(),
-          MaxTouchPoints: navigator.maxTouchPoints || 0,
-          HardwareConcurrency: navigator.hardwareConcurrency || 0
-        });
-        const uuid = await getDeviceUUID();
-        const ip = await getIPAddress();
-        const result = await callGAS("gpsCheckin", [idCode, deviceInfo, action, coordsList, force, bindDevice, uuid, ip, currentDeviceInfo]);
-        if (result.status === "success") {
-          let finalMsg = result.message;
-          if (result.detail?.time) finalMsg += `<br><span style="color:#fff;">${result.detail.time}</span>`;
-          displaySuccess(finalMsg);
-          startIndividualCooldown(button, COOLDOWN_MS, button.dataset.originalText);
-          enableAllButtonsExcept(button);
-        } else {
-          let finalMsg = result.message;
-          if (result.error === "DEVICE_UUID_MISMATCH" || result.error === "DEVICE_MISMATCH") {
-            finalMsg += "<br><span style='color:yellow;'>裝置異常請洽營運組</span>";
-          }
-          if (result.details) finalMsg += `<br><span style="font-size:14px;">詳細資訊: ${JSON.stringify(result.details)}</span>`;
-          displayError(finalMsg);
-          startIndividualCooldown(button, COOLDOWN_MS, button.dataset.originalText);
-          enableAllButtonsExcept(button);
-        }
-      } catch (err) {
-        displayError(`連線失敗: ${err.message}`);
-        startIndividualCooldown(button, COOLDOWN_MS, button.dataset.originalText);
-        enableAllButtonsExcept(button);
+        const date = new Date();
+        date.setTime(date.getTime() + (days*24*60*60*1000));
+        const expires = "expires=" + date.toUTCString();
+        document.cookie = `${name}=${value};${expires};path=/;SameSite=Strict`;
+        return true;
+      } catch(e) {
+        console.error("設置 Cookie 失敗:", e);
+        return false;
       }
     }
-    // 定位相關
-    function getLocation(successCallback, errorCallback) {
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          position => successCallback({ lat: position.coords.latitude, lng: position.coords.longitude }),
-          error => {
-            let errorMsg = "定位失敗";
-            switch (error.code) {
-              case error.PERMISSION_DENIED: errorMsg = "定位失敗｜請開啟定位權限"; break;
-              case error.POSITION_UNAVAILABLE: errorMsg = "定位失敗｜無法取得位置"; break;
-              case error.TIMEOUT: errorMsg = "定位失敗｜請求逾時"; break;
-            }
-            errorCallback(errorMsg);
-          },
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-        );
+  };
+
+  /**
+   * 加密與識別碼工具
+   */
+  const CryptoUtils = {
+    generateFallbackID: () => {
+      if (crypto && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+      }
+      return 'xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random()*16|0;
+        const v = (c === 'x') ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    },
+    hashString: async (str) => {
+      try {
+        if (!str) throw new Error("無法雜湊空字串");
+        const encoder = new TextEncoder();
+        const data = encoder.encode(str);
+        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2,"0")).join("");
+      } catch(err) {
+        console.error("雜湊函數失敗:", err);
+        return CryptoUtils.generateFallbackID();
+      }
+    }
+  };
+
+  /**
+   * 網路相關工具 (JSONP)
+   */
+  const NetworkUtils = {
+    getIPAddress: async () => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const response = await fetch('https://api.ipify.org?format=json', {signal: controller.signal});
+        clearTimeout(timeoutId);
+        if (!response.ok) throw new Error(`網路錯誤: ${response.status}`);
+        const data = await response.json();
+        return data.ip;
+      } catch(err) {
+        console.error("無法獲取 IP:", err);
+        return 'unknown';
+      }
+    },
+    updateNetworkStatus: () => {
+      if (navigator.onLine) {
+        elements.networkStatus.textContent = "已連線";
+        elements.networkStatus.className = "network-status network-online";
       } else {
-        errorCallback("瀏覽器不支援定位");
+        elements.networkStatus.textContent = "離線";
+        elements.networkStatus.className = "network-status network-offline";
+        UIUtils.displayError("網路連線已中斷");
       }
-    }
-    // 測試定位
-    const testLocation = debounce(async (button) => {
-      disableAllButtons();
-      const idCode = elements.idInput.value;
-      if (!validateIdCode(idCode)) {
-        displayError("請輸入完整的身分證後四碼");
-        startIndividualCooldown(button, COOLDOWN_MS, button.dataset.originalText);
-        enableAllButtonsExcept(button);
-        return;
-      }
-      if (!navigator.onLine) {
-        displayError("離線無法測試定位");
-        startIndividualCooldown(button, COOLDOWN_MS, button.dataset.originalText);
-        enableAllButtonsExcept(button);
-        return;
-      }
-      displayLoading("定位測試中｜請稍候...");
+    },
+    callGAS: async (functionName, parametersArray) => {
+      return new Promise((resolve, reject) => {
+        try {
+          const callbackName = 'jsonpCallback_' + Date.now() + '_' + Math.random().toString(36).substring(2,10);
+          window[callbackName] = (data) => {
+            console.log(`JSONP回調成功: ${functionName}`, data.status||'未知狀態');
+            if (script.parentNode) script.parentNode.removeChild(script);
+            delete window[callbackName];
+            resolve(data);
+          };
+          const params = new URLSearchParams({
+            function: functionName,
+            parameters: JSON.stringify(parametersArray),
+            callback: callbackName
+          });
+          const fullUrl = `${WEB_APP_URL}?${params.toString()}`;
+          console.log(`發起JSONP請求: ${functionName}`);
+          const script = document.createElement('script');
+          script.src = fullUrl;
+          script.async = true;
+          script.onerror = (e) => {
+            console.error(`JSONP請求失敗: ${functionName}`, e);
+            if (script.parentNode) script.parentNode.removeChild(script);
+            delete window[callbackName];
+            reject(new Error('JSONP 請求失敗 - 請檢查網路連接'));
+          };
+          const timeout = setTimeout(() => {
+            if (script.parentNode) script.parentNode.removeChild(script);
+            delete window[callbackName];
+            console.warn(`JSONP請求超時: ${functionName}`);
+            reject(new Error('請求超時 - 伺服器回應過慢'));
+          }, CONFIG.API_TIMEOUT);
+          script.onload = () => clearTimeout(timeout);
+          document.head.appendChild(script);
+        } catch(err) {
+          console.error("構建JSONP請求失敗:", err);
+          reject(new Error(`請求建立失敗: ${err.message}`));
+        }
+      });
+    },
+    callGASWithRetry: async (functionName, parametersArray, retries=CONFIG.JSONP_RETRY_COUNT) => {
       try {
-        const coords = await new Promise((resolve, reject) => getLocation(resolve, reject));
-        const coordsList = [{ lat: coords.lat, lng: coords.lng }];
-        const result = await callGAS("testLocationWithAuth", [idCode, coordsList]);
-        if (result.status === "success") {
-          elements.responseDiv.innerHTML = result.html ? `<div class="table-responsive">${result.html}</div>` : "無資料";
-          elements.responseDiv.classList.add("show");
-          startIndividualCooldown(button, COOLDOWN_MS, button.dataset.originalText);
-          enableAllButtonsExcept(button);
-        } else {
-          displayError(result.message);
-          startIndividualCooldown(button, COOLDOWN_MS, button.dataset.originalText);
-          enableAllButtonsExcept(button);
+        return await NetworkUtils.callGAS(functionName, parametersArray);
+      } catch(error) {
+        if (retries <= 0) throw error;
+        console.log(`JSONP請求失敗，將在${CONFIG.JSONP_RETRY_DELAY}ms後重試 (剩餘重試次數: ${retries})`);
+        await new Promise(resolve => setTimeout(resolve, CONFIG.JSONP_RETRY_DELAY));
+        return NetworkUtils.callGASWithRetry(functionName, parametersArray, retries-1);
+      }
+    },
+    checkJSONPError: (response) => {
+      return !response || (response.error && response.status === 'error');
+    }
+  };
+
+  /**
+   * UI 介面工具
+   */
+  const UIUtils = {
+    displayError: (msg) => {
+      elements.responseDiv.innerHTML = `<div style="color:red; text-align:center;">${msg}</div>`;
+      elements.responseDiv.classList.add("show");
+    },
+    displaySuccess: (msg) => {
+      elements.responseDiv.innerHTML = `<div style="color:green; font-weight:bold; text-align:center;">${msg}</div>`;
+      elements.responseDiv.classList.add("show");
+    },
+    displayLoading: (msg) => {
+      elements.responseDiv.innerHTML = `<span class="loading">${msg || "載入中｜請稍候..."}</span>`;
+      elements.responseDiv.classList.add("show");
+    },
+    clearResponse: () => {
+      elements.responseDiv.innerHTML = "";
+      elements.responseDiv.classList.remove("show");
+    },
+    disableAllButtons: () => {
+      // 設置操作狀態為進行中
+      ButtonStateManager.setOperationStatus(true);
+      
+      Object.values(elements.allButtons).forEach(button => {
+        button.disabled = true;
+        // 如果按鈕不在冷卻中，才改變其樣式
+        if (!ButtonStateManager.isButtonCooling(button.id)) {
+          button.style.background = 'linear-gradient(to right, var(--btn-disabled-from), var(--btn-disabled-to))';
         }
-      } catch (err) {
-        displayError(`測試失敗: ${err.message}`);
-        startIndividualCooldown(button, COOLDOWN_MS, button.dataset.originalText);
-        enableAllButtonsExcept(button);
+      });
+    },
+    enableAllButtons: () => {
+      // 設置操作狀態為結束
+      ButtonStateManager.setOperationStatus(false);
+      
+      Object.values(elements.allButtons).forEach(button => {
+        // 只有不在冷卻中的按鈕才啟用
+        if (!ButtonStateManager.isButtonCooling(button.id)) {
+          button.disabled = false;
+          button.style.background = originalButtonStyles[button.id];
+        }
+      });
+    },
+    enableAllButtonsExcept: (buttonToExclude) => {
+      // 設置操作狀態為結束
+      ButtonStateManager.setOperationStatus(false);
+      
+      Object.values(elements.allButtons).forEach(button => {
+        if (button.id !== buttonToExclude.id && !ButtonStateManager.isButtonCooling(button.id)) {
+          button.disabled = false;
+          button.style.background = originalButtonStyles[button.id];
+        }
+      });
+    },
+    startIndividualCooldown: (button, duration, originalText) => {
+      button.disabled = true;
+      button.textContent = originalText;
+      const btnId = button.id;
+      
+      // 標記按鈕為冷卻狀態
+      ButtonStateManager.addToCooling(btnId);
+      
+      const colorFrom = buttonColors[btnId]?.from || 'var(--btn-disabled-from)';
+      const colorTo = buttonColors[btnId]?.to || 'var(--btn-disabled-to)';
+      button.style.setProperty('--color-from', colorFrom);
+      button.style.setProperty('--color-to', colorTo);
+      button.style.setProperty('--progress', '0%');
+      button.classList.add('btn-cooldown');
+      button.style.background = `linear-gradient(to right, ${colorFrom} 0%, ${colorTo} 0%, var(--btn-disabled-from) 0%, var(--btn-disabled-to) 100%)`;
+      
+      const startTime = performance.now();
+      function updateProgress(timestamp) {
+        const elapsed = timestamp - startTime;
+        const progress = Math.min((elapsed / duration) * 100, 100);
+        button.style.setProperty('--progress', `${progress}%`);
+        
+        if (progress < 100) {
+          requestAnimationFrame(updateProgress);
+        } else {
+          button.classList.remove('btn-cooldown');
+          button.style.background = originalButtonStyles[btnId];
+          // 只有在沒有操作進行時才啟用
+          button.disabled = ButtonStateManager.operationInProgress;
+          // 從冷卻集合中移除
+          ButtonStateManager.removeFromCooling(btnId);
+        }
       }
-    }, 300);
-    // 查詢記錄
-    const queryTodayRecords = debounce(async (button) => {
-      disableAllButtons();
-      const idCode = elements.idInput.value;
-      if (!validateIdCode(idCode)) {
-        displayError("請輸入完整的身分證後四碼");
-        startIndividualCooldown(button, COOLDOWN_MS, button.dataset.originalText);
-        enableAllButtonsExcept(button);
-        return;
+      
+      requestAnimationFrame(updateProgress);
+    },
+    showCustomConfirm: (title, message, onConfirm, onCancel) => {
+      elements.modalTitle.textContent = title || "提示";
+      elements.modalMessage.textContent = message;
+      elements.overlay.classList.add("show");
+      elements.confirmBtn.onclick = () => {
+        elements.overlay.classList.remove("show");
+        if (onConfirm) onConfirm();
+      };
+      elements.cancelBtn.onclick = () => {
+        elements.overlay.classList.remove("show");
+        if (onCancel) onCancel();
+      };
+    }
+  };
+
+  /**
+   * 裝置識別碼管理
+   */
+  const DeviceIdManager = {
+    saveDeviceId: (deviceId) => {
+      if (!deviceId) {
+        console.error("嘗試儲存空的設備識別碼");
+        return false;
       }
-      if (!navigator.onLine) {
-        displayError("離線無法查詢");
-        startIndividualCooldown(button, COOLDOWN_MS, button.dataset.originalText);
-        enableAllButtonsExcept(button);
-        return;
-      }
-      displayLoading("查詢中｜請稍候...");
+      let successCount = 0;
+      const timestamp = Date.now().toString();
       try {
-        const result = await callGAS("queryTodayRecords", [idCode]);
-        if (result.status === "success") {
-          elements.responseDiv.innerHTML = result.html ? `<div class="table-responsive">${result.html}</div>` : "無資料";
-          elements.responseDiv.classList.add("show");
-          startIndividualCooldown(button, COOLDOWN_MS, button.dataset.originalText);
-          enableAllButtonsExcept(button);
-        } else {
-          displayError(result.message);
-          startIndividualCooldown(button, COOLDOWN_MS, button.dataset.originalText);
-          enableAllButtonsExcept(button);
-        }
-      } catch (err) {
-        displayError(`查詢失敗: ${err.message}`);
-        startIndividualCooldown(button, COOLDOWN_MS, button.dataset.originalText);
-        enableAllButtonsExcept(button);
+        localStorage.setItem(CONFIG.DEVICE_ID_KEY, deviceId);
+        localStorage.setItem(`${CONFIG.DEVICE_ID_KEY}_timestamp`, timestamp);
+        localStorage.setItem(`${CONFIG.DEVICE_ID_KEY}_version`, CONFIG.APP_VERSION);
+        successCount++;
+      } catch(e) {
+        console.warn("無法儲存到 localStorage:", e);
       }
-    }, 300);
-    // 影片教學控制
-    function showVideoTutorialModal() {
-      elements.videoTutorialModal.style.display = "flex";
-      elements.tutorialVideo.play().catch(() => elements.videoFallback.style.display = "block");
-    }
-    function hideVideoTutorialModal() {
-      elements.videoTutorialModal.style.display = "none";
-      elements.tutorialVideo.pause();
-      elements.videoFallback.style.display = "none";
-    }
-    
-    // 表單模態框元素
-    const formApplicationModal = document.getElementById("formApplicationModal");
-    const closeFormModal = document.getElementById("closeFormModal");
-    const overtimeForm = document.getElementById("overtimeForm");
-    const cardCorrectionForm = document.getElementById("cardCorrectionForm");
-    const leaveRequestForm = document.getElementById("leaveRequestForm");
-    
-    // 顯示表單選擇模態框
-    function showFormApplicationModal() {
-      formApplicationModal.classList.add("show");
-      formApplicationModal.classList.add("form-overlay");
-    }
-    
-    // 隱藏表單選擇模態框
-    function hideFormApplicationModal() {
-      formApplicationModal.classList.remove("show");
-      formApplicationModal.classList.remove("form-overlay");
-    }
-    
-    // 事件監聽
-    function setupEventListeners() {
-      elements.toggleBtn.addEventListener("click", () => {
-        elements.idInput.type = elements.idInput.type === "password" ? "text" : "password";
-        elements.eyeIcon.textContent = elements.idInput.type === "password" ? "visibility" : "visibility_off";
-        elements.idInput.focus();
-      });
-      elements.idInput.addEventListener("input", () => {
-        if (!/^\d*$/.test(elements.idInput.value)) {
-          elements.idInput.value = elements.idInput.value.replace(/\D/g, "");
-          elements.errorSpan.textContent = "只允許輸入 4 位數字";
-          elements.errorSpan.classList.add("show");
-        } else {
-          elements.errorSpan.textContent = "";
-          elements.errorSpan.classList.remove("show");
+      try {
+        sessionStorage.setItem(CONFIG.DEVICE_ID_KEY, deviceId);
+        sessionStorage.setItem(`${CONFIG.DEVICE_ID_KEY}_timestamp`, timestamp);
+        successCount++;
+      } catch(e) {
+        console.warn("無法儲存到 sessionStorage:", e);
+      }
+      if (StorageUtils.setCookie(CONFIG.DEVICE_ID_KEY, deviceId, 365)) {
+        successCount++;
+      }
+      return successCount > 0;
+    },
+    validateStoredIds: () => {
+      const localId = localStorage.getItem(CONFIG.DEVICE_ID_KEY);
+      const sessionId = sessionStorage.getItem(CONFIG.DEVICE_ID_KEY);
+      const cookieId = StorageUtils.getCookie(CONFIG.DEVICE_ID_KEY);
+      let primaryId = null;
+      let needsRepair = false;
+      if (localId) {
+        primaryId = localId;
+        const storedVersion = localStorage.getItem(`${CONFIG.DEVICE_ID_KEY}_version`);
+        if (storedVersion !== CONFIG.APP_VERSION) {
+          localStorage.setItem(`${CONFIG.DEVICE_ID_KEY}_version`, CONFIG.APP_VERSION);
         }
-        elements.idInput.setCustomValidity(elements.idInput.value.length !== 4 ? "必須輸入 4 位數" : "");
-        if (validateIdCode(elements.idInput.value)) enableAllButtons();
-        else disableAllButtons();
-      });
-      elements.idInput.addEventListener("blur", () => {
-        elements.errorSpan.textContent = "";
-        elements.errorSpan.classList.remove("show");
-        elements.idInput.setCustomValidity(elements.idInput.value.length !== 4 ? "必須輸入 4 位數" : "");
-      });
-      elements.closeVideoModal.addEventListener("click", hideVideoTutorialModal);
-      elements.tutorialVideo.addEventListener("error", () => {
-        elements.tutorialVideo.style.display = "none";
-        elements.videoFallback.style.display = "block";
-      });
-      elements.confirmIncognito.addEventListener("click", () => elements.incognitoPrompt.style.display = "none");
-      elements.cancelIncognito.addEventListener("click", () => {
-        alert("您已取消，無法進入系統！");
-        window.location.href = "about:blank";
-      });
-      elements.allButtons.btnOn.addEventListener("click", () => startClockAction("上班", false, elements.allButtons.btnOn));
-      elements.allButtons.btnOff.addEventListener("click", () => startClockAction("下班", false, elements.allButtons.btnOff));
-      elements.allButtons.btnQuery.addEventListener("click", () => queryTodayRecords(elements.allButtons.btnQuery));
-      elements.allButtons.btnTest.addEventListener("click", () => testLocation(elements.allButtons.btnTest));
-      
-      // 表單申請按鈕事件
-      document.getElementById("btnForm").addEventListener("click", () => {
-        showFormApplicationModal();
-      });
-      
-      closeFormModal.addEventListener("click", hideFormApplicationModal);
-      
-      // 點擊模態框外部區域關閉模態框
-      formApplicationModal.addEventListener("click", (e) => {
-        if (e.target === formApplicationModal) {
-          hideFormApplicationModal();
+      } else if (cookieId) {
+        primaryId = cookieId;
+        needsRepair = true;
+      } else if (sessionId) {
+        primaryId = sessionId;
+        needsRepair = true;
+      }
+      if (primaryId && (primaryId!==localId || primaryId!==sessionId || primaryId!==cookieId)) {
+        needsRepair = true;
+      }
+      if (primaryId && needsRepair) {
+        console.log("檢測到識別碼不一致，正在修復...");
+        DeviceIdManager.saveDeviceId(primaryId);
+        return true;
+      }
+      return false;
+    },
+    getDeviceUuid: async () => {
+      const storedId = localStorage.getItem(CONFIG.DEVICE_ID_KEY) ||
+                       sessionStorage.getItem(CONFIG.DEVICE_ID_KEY) ||
+                       StorageUtils.getCookie(CONFIG.DEVICE_ID_KEY);
+      if (storedId) {
+        DeviceIdManager.validateStoredIds();
+        return storedId;
+      }
+      try {
+        const stableFeatures = [
+          navigator.platform || '',
+          `${screen.width}x${screen.height}`,
+          navigator.language || '',
+          screen.colorDepth || 0,
+          navigator.userAgent.substring(0,100)
+        ];
+        if (!BrowserUtils.isSafari()) {
+          stableFeatures.push(navigator.hardwareConcurrency || 0);
+          stableFeatures.push(window.devicePixelRatio || 0);
+          stableFeatures.push(BrowserUtils.getWebGLFingerprint());
         }
-      });
-      
-      // 表單選項點擊事件
-      overtimeForm.addEventListener("click", () => {
-        showCustomConfirm("加班申請", "加班申請功能開發中，即將推出", () => {
-          hideFormApplicationModal();
-        });
-      });
-      
-      cardCorrectionForm.addEventListener("click", () => {
-        showCustomConfirm("補卡申請", "補卡申請功能開發中，即將推出", () => {
-          hideFormApplicationModal();
-        });
-      });
-      
-      leaveRequestForm.addEventListener("click", () => {
-        showCustomConfirm("請假申請", "請假申請功能開發中，即將推出", () => {
-          hideFormApplicationModal();
-        });
-      });
-    }
-    // 定期檢查
-    function startPeriodicChecks() {
-      setInterval(validateStoredIDs, CONSISTENCY_CHECK_INTERVAL);
-    }
-    // 初始化
-    function init() {
-      recoverDeviceID();
-      showSafariNotice();
-      setupEventListeners();
-      updateNetworkStatus();
-      elements.incognitoPrompt.style.display = "flex";
-      startPeriodicChecks();
-      
-      // 將新按鈕添加到allButtons對象中
-      elements.allButtons.btnForm = document.getElementById("btnForm");
-      originalButtonStyles.btnForm = 'linear-gradient(to right, #9c27b0 0%, #673ab7 100%)';
-    }
-    function recoverDeviceID() {
-      const validID = localStorage.getItem(DEVICE_ID_KEY) || sessionStorage.getItem(DEVICE_ID_KEY) || getCookie(DEVICE_ID_KEY);
-      if (validID) {
-        saveDeviceID(validID);
+        const ip = await NetworkUtils.getIPAddress().catch(()=> 'unknown');
+        stableFeatures.push(ip);
+        const deviceFingerprint = stableFeatures.join('|');
+        const newId = await CryptoUtils.hashString(deviceFingerprint)
+          .catch(()=> CryptoUtils.generateFallbackID());
+        DeviceIdManager.saveDeviceId(newId);
+        return newId;
+      } catch(err) {
+        console.error("生成設備識別碼失敗:", err);
+        const fallbackId = CryptoUtils.generateFallbackID();
+        DeviceIdManager.saveDeviceId(fallbackId);
+        return fallbackId;
+      }
+    },
+    recoverDeviceId: () => {
+      const validId = localStorage.getItem(CONFIG.DEVICE_ID_KEY) ||
+                      sessionStorage.getItem(CONFIG.DEVICE_ID_KEY) ||
+                      StorageUtils.getCookie(CONFIG.DEVICE_ID_KEY);
+      if (validId) {
+        DeviceIdManager.saveDeviceId(validId);
         console.log('已恢復設備識別碼');
       }
     }
-    window.addEventListener("load", init);
-  </script>
+  };
+
+  /**
+   * 裝置資訊管理
+   */
+  const DeviceInfoManager = {
+    collectDeviceInfo: () => {
+      return {
+        OS: navigator.platform || "未知",
+        Browser: navigator.userAgent || "未知",
+        ScreenResolution: `${window.screen.width}x${window.screen.height}`,
+        TimeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "未知",
+        Language: navigator.language || "未知",
+        HardwareConcurrency: navigator.hardwareConcurrency || 0,
+        DeviceMemory: navigator.deviceMemory || 0,
+        MaxTouchPoints: navigator.maxTouchPoints || 0,
+        ColorDepth: window.screen.colorDepth || 24,
+        PixelRatio: window.devicePixelRatio || 1,
+        IsSafari: BrowserUtils.isSafari(),
+        TouchSupport: ('ontouchstart' in window) || (navigator.maxTouchPoints>0),
+        AvailScreen: `${window.screen.availWidth}x${window.screen.availHeight}`,
+        Fonts: BrowserUtils.detectCommonFonts(),
+        AppVersion: CONFIG.APP_VERSION
+      };
+    }
+  };
+
+  /**
+   * 位置管理 (多點定位)
+   */
+  const LocationManager = {
+    getCurrentLocation: async (sampleCount=3, sampleInterval=500) => {
+      return new Promise(async (resolve, reject) => {
+        if (!("geolocation" in navigator)) {
+          reject("瀏覽器不支援定位");
+          return;
+        }
+        UIUtils.displayLoading(`定位中｜請稍候...`);
+        const getSingleLocation = (index) => {
+          return new Promise((resolveLoc, rejectLoc) => {
+            setTimeout(() => {
+              navigator.geolocation.getCurrentPosition(
+                position => {
+                  let ts = position.timestamp;
+                  if (ts < 1e11) ts = ts*1000;
+                  console.log(`位置採樣 #${index+1} 成功: 精度=${position.coords.accuracy}m`);
+                  resolveLoc({
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                    accuracy: position.coords.accuracy,
+                    timestamp: ts,
+                    sampleIndex: index
+                  });
+                },
+                error => {
+                  console.warn(`位置採樣 #${index+1} 失敗: ${error.code}-${error.message}`);
+                  rejectLoc(error);
+                },
+                { enableHighAccuracy:true, timeout:10000, maximumAge:0 }
+              );
+            }, index*sampleInterval);
+          });
+        };
+        try {
+          const locationPromises = Array.from({length:sampleCount}, (_,i) =>
+            getSingleLocation(i).catch(()=> null)
+          );
+          const results = await Promise.allSettled(locationPromises);
+          const successfulResults = results
+            .filter(r=>r.status==='fulfilled' && r.value!==null)
+            .map(r=>r.value);
+          console.log(`位置採樣結果: ${successfulResults.length}/${sampleCount} 成功`);
+          if (successfulResults.length>0) {
+            const sortedCoords = successfulResults.sort((a,b)=>
+              (a.accuracy||9999)-(b.accuracy||9999)
+            );
+            resolve(sortedCoords);
+          } else {
+            reject("無法獲取足夠的位置數據");
+          }
+        } catch(err) {
+          reject(`定位系統錯誤: ${err.message||err}`);
+        }
+      });
+    }
+  };
+
+  /**
+   * @constant {string} WEB_APP_URL - 部署網址 (GAS)
+   */
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz76tporyDWPW1TvwhCk2rVtnph1wRsNoC7k8Q402VYoZhV6ysp_DgIcVKP6pJLQauYVQ/exec";
+
+  /**
+   * @constant {Object} CONFIG
+   */
+  const CONFIG = {
+    COOLDOWN_MS: 5000,
+    CONSISTENCY_CHECK_INTERVAL: 30000,
+    DEVICE_ID_KEY: 'OS_DEVICE_ID',
+    APP_VERSION: '1.0.6',
+    API_TIMEOUT: 15000,
+    JSONP_RETRY_COUNT: 2,
+    JSONP_RETRY_DELAY: 1000
+  };
+
+  /**
+   * 主要DOM元素
+   */
+  const elements = {
+    toggleBtn: document.getElementById("toggleBtn"),
+    idInput: document.getElementById("idCode"),
+    eyeIcon: document.getElementById("eyeIcon"),
+    responseDiv: document.getElementById("response"),
+    overlay: document.getElementById("overlay"),
+    modalTitle: document.getElementById("modal-title"),
+    modalMessage: document.getElementById("modal-message"),
+    confirmBtn: document.getElementById("modal-confirm"),
+    cancelBtn: document.getElementById("modal-cancel"),
+    incognitoPrompt: document.getElementById("incognitoPrompt"),
+    confirmIncognito: document.getElementById("confirmIncognito"),
+    cancelIncognito: document.getElementById("cancelIncognito"),
+    videoTutorialModal: document.getElementById("videoTutorialModal"),
+    closeVideoModal: document.getElementById("closeVideoModal"),
+    tutorialVideo: document.getElementById("tutorialVideo"),
+    videoFallback: document.getElementById("videoFallback"),
+    networkStatus: document.getElementById("networkStatus"),
+    errorSpan: document.querySelector(".error-message"),
+    safariNotice: document.getElementById("safariNotice"),
+    allButtons: {
+      btnOn: document.getElementById("btnOn"),
+      btnOff: document.getElementById("btnOff"),
+      btnQuery: document.getElementById("btnQuery"),
+      btnTest: document.getElementById("btnTest"),
+      btnForm: document.getElementById("btnForm")
+    }
+  };
+
+  /**
+   * 原始按鈕樣式
+   */
+  const originalButtonStyles = {
+    btnOn: 'linear-gradient(to right, #28a745 0%, #1e7e34 100%)',
+    btnOff: 'linear-gradient(to right, #e74c3c 0%, #c0392b 100%)',
+    btnQuery: 'linear-gradient(to right, #3498db 0%, #2980b9 100%)',
+    btnTest: 'linear-gradient(to right, #f39c12 0%, #e67e22 100%)',
+    btnForm: 'linear-gradient(to right, var(--btn-form-from) 0%, var(--btn-form-to) 100%)'
+  };
+
+  /**
+   * 按鈕顏色配置
+   */
+  const buttonColors = {
+    btnOn: { from: '#28a745', to: '#1e7e34' },
+    btnOff: { from: '#e74c3c', to: '#c0392b' },
+    btnQuery: { from: '#3498db', to: '#2980b9' },
+    btnTest: { from: '#f39c12', to: '#e67e22' },
+    btnForm: { from: '#9c27b0', to: '#673ab7' }
+  };
+
+  /* ====================================
+     2) 主要功能函式 (打卡、定位、表單)
+  =====================================*/
+
+  /**
+   * 顯示表單選擇模態框
+   */
+  function showFormApplicationModal() {
+    const formApplicationModal = document.getElementById("formApplicationModal");
+    formApplicationModal.classList.add("show");
+    formApplicationModal.classList.add("form-overlay");
+  }
+
+  /**
+   * 隱藏表單選擇模態框
+   */
+  function hideFormApplicationModal() {
+    const formApplicationModal = document.getElementById("formApplicationModal");
+    formApplicationModal.classList.remove("show");
+    formApplicationModal.classList.remove("form-overlay");
+  }
+
+  /**
+   * 顯示影片教學
+   */
+  function showVideoTutorialModal() {
+    elements.videoTutorialModal.style.display = "flex";
+    elements.tutorialVideo.play().catch(() => (elements.videoFallback.style.display = "block"));
+  }
+
+  /**
+   * 隱藏影片教學
+   */
+  function hideVideoTutorialModal() {
+    elements.videoTutorialModal.style.display = "none";
+    elements.tutorialVideo.pause();
+    elements.videoFallback.style.display = "none";
+  }
+
+  /**
+   * 測試定位功能
+   */
+  async function testLocation(button) {
+    // 設置操作狀態為進行中
+    ButtonStateManager.setOperationStatus(true);
+    UIUtils.disableAllButtons();
+    
+    const idCode = elements.idInput.value;
+
+    if (!validateIdCode(idCode)) {
+      UIUtils.displayError("請輸入完整的身分證後四碼");
+      UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
+      UIUtils.enableAllButtonsExcept(button);
+      return;
+    }
+    if (!navigator.onLine) {
+      UIUtils.displayError("離線無法測試定位");
+      UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
+      UIUtils.enableAllButtonsExcept(button);
+      return;
+    }
+    UIUtils.displayLoading("定位測試中｜請稍候...");
+
+    try {
+      const coordsList = await LocationManager.getCurrentLocation(3, 500);
+      const result = await NetworkUtils.callGASWithRetry("testLocationWithAuth", [idCode, coordsList]);
+
+      if (result.status === "success") {
+        elements.responseDiv.innerHTML = result.html
+          ? `<div class="table-responsive">${result.html}</div>` : "無資料";
+        elements.responseDiv.classList.add("show");
+        UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
+        UIUtils.enableAllButtonsExcept(button);
+      } else {
+        UIUtils.displayError(result.message);
+        UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
+        UIUtils.enableAllButtonsExcept(button);
+      }
+    } catch(err) {
+      UIUtils.displayError(`測試失敗: ${err.message}`);
+      UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
+      UIUtils.enableAllButtonsExcept(button);
+    } finally {
+      ButtonStateManager.setOperationStatus(false);
+    }
+  }
+
+  /**
+   * 查詢今日打卡記錄
+   */
+  async function queryTodayRecords(button) {
+    // 設置操作狀態為進行中
+    ButtonStateManager.setOperationStatus(true);
+    UIUtils.disableAllButtons();
+    
+    const idCode = elements.idInput.value;
+
+    if (!validateIdCode(idCode)) {
+      UIUtils.displayError("請輸入完整的身分證後四碼");
+      UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
+      UIUtils.enableAllButtonsExcept(button);
+      return;
+    }
+    if (!navigator.onLine) {
+      UIUtils.displayError("離線無法查詢");
+      UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
+      UIUtils.enableAllButtonsExcept(button);
+      return;
+    }
+    UIUtils.displayLoading("查詢中｜請稍候...");
+
+    try {
+      const result = await NetworkUtils.callGASWithRetry("queryTodayRecords", [idCode]);
+      if (result.status === "success") {
+        elements.responseDiv.innerHTML = result.html
+          ? `<div class="table-responsive">${result.html}</div>`
+          : "無資料";
+        elements.responseDiv.classList.add("show");
+        UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
+        UIUtils.enableAllButtonsExcept(button);
+      } else {
+        UIUtils.displayError(result.message);
+        UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
+        UIUtils.enableAllButtonsExcept(button);
+      }
+    } catch(err) {
+      UIUtils.displayError(`查詢失敗: ${err.message}`);
+      UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
+      UIUtils.enableAllButtonsExcept(button);
+    } finally {
+      ButtonStateManager.setOperationStatus(false);
+    }
+  }
+
+  /**
+   * 開始打卡動作流程
+   */
+  async function startClockAction(action, force, button) {
+    // 設置操作狀態為進行中
+    ButtonStateManager.setOperationStatus(true);
+    UIUtils.disableAllButtons();
+    
+    const idCode = elements.idInput.value;
+
+    if (!validateIdCode(idCode)) {
+      UIUtils.displayError("請輸入完整的身分證後四碼");
+      UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
+      UIUtils.enableAllButtonsExcept(button);
+      return;
+    }
+    if (!navigator.onLine) {
+      UIUtils.displayError("請確認網路連線");
+      UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
+      UIUtils.enableAllButtonsExcept(button);
+      return;
+    }
+    UIUtils.displayLoading("檢查中｜請稍候...");
+
+    try {
+      const result = await NetworkUtils.callGASWithRetry("checkDeviceBinding", [idCode]);
+
+      if (result.status === "success") {
+        startCountdown(action, force, false, button);
+      } else if (result.status === "error") {
+        if (result.error === "AUTH.NOT_BOUND") {
+          const browser = BrowserUtils.parseBrowser(navigator.userAgent);
+          UIUtils.showCustomConfirm(
+            "裝置綁定確認",
+            `是否同意綁定 ${browser}`,
+            () => startCountdown(action, force, true, button),
+            () => {
+              UIUtils.displayError("已取消打卡");
+              UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
+              UIUtils.enableAllButtonsExcept(button);
+              ButtonStateManager.setOperationStatus(false);
+            }
+          );
+        } else {
+          UIUtils.displayError(result.message);
+          UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
+          UIUtils.enableAllButtonsExcept(button);
+          ButtonStateManager.setOperationStatus(false);
+        }
+      }
+    } catch(err) {
+      UIUtils.displayError(`檢查失敗: ${err.message}`);
+      UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
+      UIUtils.enableAllButtonsExcept(button);
+      ButtonStateManager.setOperationStatus(false);
+    }
+  }
+
+  /**
+   * 5 秒倒數
+   */
+  function startCountdown(action, force, bindDevice, button) {
+    // 保持操作狀態為進行中
+    ButtonStateManager.setOperationStatus(true);
+    UIUtils.disableAllButtons();
+    
+    elements.overlay.classList.add("show");
+    elements.modalTitle.textContent = "打卡確認";
+
+    let countdown = 5;
+    elements.modalMessage.textContent = `將於 ${countdown} 秒後建立 ${action} 打卡`;
+
+    const timer = setInterval(()=>{
+      countdown--;
+      elements.modalMessage.textContent = `將於 ${countdown} 秒後建立 ${action} 打卡`;
+
+      if (countdown<=0) {
+        clearInterval(timer);
+        elements.overlay.classList.remove("show");
+        handleAction(action, force, bindDevice, button);
+      }
+    }, 1000);
+
+    elements.confirmBtn.onclick = () => {
+      clearInterval(timer);
+      elements.overlay.classList.remove("show");
+      handleAction(action, force, bindDevice, button);
+    };
+    elements.cancelBtn.onclick = () => {
+      clearInterval(timer);
+      elements.overlay.classList.remove("show");
+      UIUtils.displayError("已取消打卡");
+      UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
+      UIUtils.enableAllButtonsExcept(button);
+      ButtonStateManager.setOperationStatus(false);
+    };
+  }
+
+  /**
+   * 實際打卡動作 (多點定位 + JSONP)
+   */
+  async function handleAction(action, force, bindDevice, button) {
+    // 保持操作狀態為進行中
+    ButtonStateManager.setOperationStatus(true);
+    UIUtils.disableAllButtons();
+    
+    const idCode = elements.idInput.value;
+    UIUtils.displayLoading("審核中｜請稍候...");
+
+    try {
+      const coordsList = await LocationManager.getCurrentLocation(3, 500);
+      const deviceInfo = JSON.stringify(DeviceInfoManager.collectDeviceInfo());
+      const currentDeviceInfo = JSON.stringify(DeviceInfoManager.collectDeviceInfo());
+      const uuid = await DeviceIdManager.getDeviceUuid();
+      const ip = await NetworkUtils.getIPAddress();
+      console.log(`開始${action}打卡請求...`);
+
+      const result = await NetworkUtils.callGASWithRetry("gpsCheckin", [
+        idCode, deviceInfo, action, coordsList, force, bindDevice, uuid, ip, currentDeviceInfo
+      ]);
+
+      if (result.status === "success") {
+        let finalMsg = result.message;
+        if (result.detail?.time) {
+          finalMsg += `<br><span style="color:#fff;">${result.detail.time}</span>`;
+        }
+        if (result.detail?.gpsAccuracy) {
+          finalMsg += `<br><span style="color:#76ff03;">${result.detail.gpsAccuracy}</span>`;
+        }
+        UIUtils.displaySuccess(finalMsg);
+        UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
+        UIUtils.enableAllButtonsExcept(button);
+      } else {
+        let finalMsg = result.message || "系統錯誤｜請稍後再試";
+        if (result.error === "SHIFT.INSUFFICIENT_REST") {
+          finalMsg = "休息時間不足｜請稍後再試";
+        } else if (result.error === "SYS.RATE_LIMIT_EXCEEDED") {
+          finalMsg = "操作過於頻繁｜請稍後再試";
+        } else if (result.error === "GPS.OUT_OF_RANGE" || result.error === "GPS.RANGE_ERROR") {
+          finalMsg = "超出可打卡範圍｜請重新開關網路";
+        } else if (result.error === "BROWSER.UNSUPPORTED") {
+          finalMsg = "瀏覽器不支援｜應使用Chrome、Firefox或Edge";
+        } else if (result.error === "AUTH.DEVICE_MISMATCH") {
+          finalMsg += "<br><span style='color:yellow;'>裝置異常請洽營運組</span>";
+        } else if (result.error === "AUTH.DEVICE_TYPE_MISMATCH") {
+          finalMsg += "<br><span style='color:yellow;'>綁定裝置不符｜請洽營運組</span>";
+        }
+        if (result.detail) {
+          finalMsg += `<br><span style="font-size:14px;">詳細資訊: ${JSON.stringify(result.detail)}</span>`;
+        }
+        UIUtils.displayError(finalMsg);
+        UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
+        UIUtils.enableAllButtonsExcept(button);
+      }
+    } catch(err) {
+      UIUtils.displayError(`連線失敗: ${err.message}`);
+      UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
+      UIUtils.enableAllButtonsExcept(button);
+    } finally {
+      ButtonStateManager.setOperationStatus(false);
+    }
+  }
+
+  /* ====================================
+     3) 綁定事件 & 初始化
+  =====================================*/
+
+  function setupEventListeners() {
+    // 切換密碼顯示
+    elements.toggleBtn.addEventListener("click", () => {
+      elements.idInput.type = (elements.idInput.type==="password") ? "text" : "password";
+      elements.eyeIcon.textContent = (elements.idInput.type==="password") ? "visibility" : "visibility_off";
+      elements.idInput.focus();
+    });
+
+    // 輸入驗證
+    elements.idInput.addEventListener("input", () => {
+      if (!/^\d*$/.test(elements.idInput.value)) {
+        elements.idInput.value = elements.idInput.value.replace(/\D/g, "");
+        elements.errorSpan.textContent = "只允許輸入 4 位數字";
+        elements.errorSpan.classList.add("show");
+      } else {
+        elements.errorSpan.textContent = "";
+        elements.errorSpan.classList.remove("show");
+      }
+      elements.idInput.setCustomValidity(elements.idInput.value.length!==4 ? "必須輸入 4 位數" : "");
+      if (validateIdCode(elements.idInput.value)) {
+        UIUtils.enableAllButtons();
+      } else {
+        UIUtils.disableAllButtons();
+      }
+    });
+    elements.idInput.addEventListener("blur", () => {
+      elements.errorSpan.textContent = "";
+      elements.errorSpan.classList.remove("show");
+      elements.idInput.setCustomValidity(elements.idInput.value.length!==4 ? "必須輸入 4 位數" : "");
+    });
+
+    // 影片教學
+    elements.closeVideoModal.addEventListener("click", hideVideoTutorialModal);
+    elements.tutorialVideo.addEventListener("error", () => {
+      elements.tutorialVideo.style.display = "none";
+      elements.videoFallback.style.display = "block";
+    });
+
+    // 無痕瀏覽器提示
+    elements.confirmIncognito.addEventListener("click", () => {
+      elements.incognitoPrompt.style.display = "none";
+    });
+    elements.cancelIncognito.addEventListener("click", () => {
+      alert("已取消｜無法使用系統");
+      window.location.href="about:blank";
+    });
+
+    // 功能按鈕
+    elements.allButtons.btnOn.addEventListener("click", () =>
+      startClockAction("上班", false, elements.allButtons.btnOn)
+    );
+    elements.allButtons.btnOff.addEventListener("click", () =>
+      startClockAction("下班", false, elements.allButtons.btnOff)
+    );
+
+    // 防抖後的定位 & 查詢
+    const debouncedTestLocation = debounce(testLocation, 300);
+    elements.allButtons.btnTest.addEventListener("click", () => {
+      debouncedTestLocation(elements.allButtons.btnTest);
+    });
+
+    const debouncedQueryRecords = debounce(queryTodayRecords, 300);
+    elements.allButtons.btnQuery.addEventListener("click", () => {
+      debouncedQueryRecords(elements.allButtons.btnQuery);
+    });
+
+    // 表單
+    elements.allButtons.btnForm.addEventListener("click", () => {
+      showFormApplicationModal();
+    });
+
+    document.getElementById("closeFormModal")
+      .addEventListener("click", hideFormApplicationModal);
+
+    const formAppModal = document.getElementById("formApplicationModal");
+    formAppModal.addEventListener("click", (e) => {
+      if (e.target === formAppModal) {
+        hideFormApplicationModal();
+      }
+    });
+
+    // 表單項目
+    document.getElementById("overtimeForm").addEventListener("click", () => {
+      UIUtils.showCustomConfirm("加班申請","加班申請功能開發中，即將推出",()=>{
+        hideFormApplicationModal();
+      });
+    });
+    document.getElementById("cardCorrectionForm").addEventListener("click", () => {
+      UIUtils.showCustomConfirm("補卡申請","補卡申請功能開發中，即將推出",()=>{
+        hideFormApplicationModal();
+      });
+    });
+    document.getElementById("leaveRequestForm").addEventListener("click", () => {
+      UIUtils.showCustomConfirm("請假申請","請假申請功能開發中，即將推出",()=>{
+        hideFormApplicationModal();
+      });
+    });
+  }
+
+  function init() {
+    DeviceIdManager.recoverDeviceId();
+    BrowserUtils.showSafariNotice();
+    setupEventListeners();
+    NetworkUtils.updateNetworkStatus();
+    elements.incognitoPrompt.style.display="flex";
+    setInterval(DeviceIdManager.validateStoredIds, CONFIG.CONSISTENCY_CHECK_INTERVAL);
+  }
+
+  window.addEventListener("online", NetworkUtils.updateNetworkStatus);
+  window.addEventListener("offline", NetworkUtils.updateNetworkStatus);
+  window.addEventListener("load", init);
+</script>
 </body>
 </html>
