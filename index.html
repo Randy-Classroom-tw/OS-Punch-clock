@@ -579,6 +579,7 @@
     }
   </style>
 </head>
+
 <body>
   <div id="networkStatus" class="network-status network-online">已連線</div>
   <div class="container">
@@ -974,7 +975,7 @@
     }
   };
 
-  /**
+/**
    * UI 介面工具
    */
   const UIUtils = {
@@ -1215,13 +1216,23 @@
    * 位置管理 (多點定位)
    */
   const LocationManager = {
-    getCurrentLocation: async (sampleCount=3, sampleInterval=500) => {
+    getCurrentLocation: async (sampleCount=5, sampleInterval=500) => {
       return new Promise(async (resolve, reject) => {
         if (!("geolocation" in navigator)) {
           reject("瀏覽器不支援定位");
           return;
         }
-        UIUtils.displayLoading(`定位中｜請稍候...`);
+        
+        // 顯示更詳細的載入訊息
+        UIUtils.displayLoading(`定位中｜採集 ${sampleCount} 個位置樣本...`);
+        
+        // 添加進度指示
+        let completedSamples = 0;
+        const updateProgress = () => {
+          completedSamples++;
+          UIUtils.displayLoading(`定位中｜已完成 ${completedSamples}/${sampleCount} 個樣本...`);
+        };
+        
         const getSingleLocation = (index) => {
           return new Promise((resolveLoc, rejectLoc) => {
             setTimeout(() => {
@@ -1230,6 +1241,7 @@
                   let ts = position.timestamp;
                   if (ts < 1e11) ts = ts*1000;
                   console.log(`位置採樣 #${index+1} 成功: 精度=${position.coords.accuracy}m`);
+                  updateProgress(); // 更新進度
                   resolveLoc({
                     lat: position.coords.latitude,
                     lng: position.coords.longitude,
@@ -1240,13 +1252,19 @@
                 },
                 error => {
                   console.warn(`位置採樣 #${index+1} 失敗: ${error.code}-${error.message}`);
+                  updateProgress(); // 更新進度
                   rejectLoc(error);
                 },
-                { enableHighAccuracy:true, timeout:10000, maximumAge:0 }
+                { 
+                  enableHighAccuracy: true, 
+                  timeout: 10000, 
+                  maximumAge: 0 
+                }
               );
             }, index*sampleInterval);
           });
         };
+        
         try {
           const locationPromises = Array.from({length:sampleCount}, (_,i) =>
             getSingleLocation(i).catch(()=> null)
@@ -1271,7 +1289,7 @@
     }
   };
 
-  /**
+/**
    * @constant {string} WEB_APP_URL - 部署網址 (GAS)
    */
   const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwQz2Zrzn_QdNfELnr_4djA5T622UYxWhnN9m0oTHwMcHQK2NrbG-ayOKspevbAF3-K/exec";
@@ -1284,7 +1302,7 @@
     CONSISTENCY_CHECK_INTERVAL: 30000,
     DEVICE_ID_KEY: 'OS_DEVICE_ID',
     APP_VERSION: '1.0.6',
-    API_TIMEOUT: 15000,
+    API_TIMEOUT: 20000, // 從 15000 增加到 20000，適應多座標處理
     JSONP_RETRY_COUNT: 2,
     JSONP_RETRY_DELAY: 1000
   };
@@ -1343,7 +1361,7 @@
     btnForm: { from: '#9c27b0', to: '#673ab7' }
   };
 
-  /* ====================================
+/* ====================================
      2) 主要功能函式 (打卡、定位、表單)
   =====================================*/
 
@@ -1407,12 +1425,23 @@
     UIUtils.displayLoading("定位測試中｜請稍候...");
 
     try {
-      const coordsList = await LocationManager.getCurrentLocation(3, 500);
+      const coordsList = await LocationManager.getCurrentLocation(5, 500); // 增加到5個樣本
       const result = await NetworkUtils.callGASWithRetry("testLocationWithAuth", [idCode, coordsList]);
 
       if (result.status === "success") {
         elements.responseDiv.innerHTML = result.html
           ? `<div class="table-responsive">${result.html}</div>` : "無資料";
+        
+        // 新增: 檢查並顯示穩定性相關警告
+        if (result.detail?.stability !== undefined && result.detail.stability < 0.7) {
+          const stabilityWarning = document.createElement('div');
+          stabilityWarning.style.color = '#FFC107';
+          stabilityWarning.style.marginTop = '10px';
+          stabilityWarning.style.fontSize = '14px';
+          stabilityWarning.innerHTML = `<i class="material-icons" style="vertical-align:middle;font-size:16px;margin-right:5px;">warning</i>GPS 信號不穩定 (${Math.round(result.detail.stability*100)}%)，請確保處於開放空間`;
+          elements.responseDiv.appendChild(stabilityWarning);
+        }
+        
         elements.responseDiv.classList.add("show");
         UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
         UIUtils.enableAllButtonsExcept(button);
@@ -1587,7 +1616,7 @@
     UIUtils.displayLoading("審核中｜請稍候...");
 
     try {
-      const coordsList = await LocationManager.getCurrentLocation(3, 500);
+      const coordsList = await LocationManager.getCurrentLocation(5, 500); // 增加到5個樣本
       const deviceInfo = JSON.stringify(DeviceInfoManager.collectDeviceInfo());
       const currentDeviceInfo = JSON.stringify(DeviceInfoManager.collectDeviceInfo());
       const uuid = await DeviceIdManager.getDeviceUuid();
@@ -1603,9 +1632,23 @@
         if (result.detail?.time) {
           finalMsg += `<br><span style="color:#fff;">${result.detail.time}</span>`;
         }
+        
+        // 增加對安全邊界的顯示
+        if (result.detail?.safetyMargin && result.detail.safetyMargin > 0) {
+          finalMsg += `<br><span style="color:#FFC107;">已加入 ${result.detail.safetyMargin} 公尺安全邊界</span>`;
+        }
+        
+        // 增加對信號穩定度的顯示
+        if (result.detail?.stability !== undefined) {
+          const stabilityPercent = Math.round(result.detail.stability * 100);
+          const stabilityColor = stabilityPercent >= 70 ? '#4CAF50' : stabilityPercent >= 50 ? '#FFC107' : '#FF5722';
+          finalMsg += `<br><span style="color:${stabilityColor};">GPS 信號穩定度: ${stabilityPercent}%</span>`;
+        }
+        
         if (result.detail?.gpsAccuracy) {
           finalMsg += `<br><span style="color:#76ff03;">${result.detail.gpsAccuracy}</span>`;
         }
+        
         UIUtils.displaySuccess(finalMsg);
         UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
         UIUtils.enableAllButtonsExcept(button);
@@ -1640,7 +1683,7 @@
     }
   }
 
-  /* ====================================
+/* ====================================
      3) 綁定事件 & 初始化
   =====================================*/
 
