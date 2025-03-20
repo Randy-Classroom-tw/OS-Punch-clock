@@ -1438,7 +1438,7 @@
           stabilityWarning.style.color = '#FFC107';
           stabilityWarning.style.marginTop = '10px';
           stabilityWarning.style.fontSize = '14px';
-          stabilityWarning.innerHTML = `<i class="material-icons" style="vertical-align:middle;font-size:16px;margin-right:5px;">warning</i>GPS 信號不穩定 (${Math.round(result.detail.stability*100)}%)，請確保處於開放空間`;
+          stabilityWarning.innerHTML = `<i class="material-icons" style="vertical-align:middle;font-size:16px;margin-right:5px;">warning</i>GPS 信號不穩定 (${Math.round(result.detail.stability*100)}%)`;
           elements.responseDiv.appendChild(stabilityWarning);
         }
         
