@@ -577,74 +577,6 @@
       background-image: linear-gradient(to right, var(--color-from) 0%, var(--color-to) var(--progress), #666 var(--progress), #555 100%) !important;
       transition: --progress 0.3s linear;
     }
-    
-    /* iOS Safari 特殊樣式 */
-    .ios-warning {
-      background-color: rgba(255, 235, 59, 0.1);
-      border-left: 3px solid #ffeb3b;
-      padding: 8px 12px;
-      margin-bottom: 10px;
-      border-radius: 4px;
-      font-size: 14px;
-      color: #ffeb3b;
-      display: flex;
-      align-items: center;
-    }
-    
-    .ios-warning .material-icons {
-      margin-right: 8px;
-      font-size: 18px;
-    }
-    
-    .ios-success {
-      background-color: rgba(76, 175, 80, 0.1);
-      border-left: 3px solid #4CAF50;
-      padding: 8px 12px;
-      margin-bottom: 10px;
-      border-radius: 4px;
-      font-size: 14px;
-      color: #4CAF50;
-      display: flex;
-      align-items: center;
-    }
-    
-    .ios-success .material-icons {
-      margin-right: 8px;
-      font-size: 18px;
-    }
-    
-    /* 脈衝按鈕樣式 */
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7); }
-      70% { box-shadow: 0 0 0 10px rgba(33, 150, 243, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0); }
-    }
-    
-    .btn-pulse {
-      animation: pulse 1.5s infinite;
-    }
-
-    /* 位置重置按鈕樣式 */
-    #resetLocationBtn {
-      margin-top: 10px;
-      padding: 8px 15px;
-      background: #2196F3;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-family: 'Roboto Mono', monospace;
-      font-size: 14px;
-      transition: background-color 0.3s;
-    }
-    
-    #resetLocationBtn:hover {
-      background: #1976D2;
-    }
-    
-    #resetLocationBtn:active {
-      background: #0D47A1;
-    }
   </style>
 </head>
 
@@ -689,7 +621,6 @@
     <div id="response" role="status" aria-live="polite"></div>
   </div>
   
-  <!-- 打卡確認模態框 -->
   <div id="overlay" class="overlay">
     <div class="modal">
       <h3 id="modal-title">提示</h3>
@@ -701,18 +632,10 @@
     </div>
   </div>
   
-  <!-- 無痕模式提示 (替換後的版本) -->
   <div id="incognitoPrompt">
     <div class="prompt-content">
       <h2>系統提示</h2>
       <p>請確保關閉無痕瀏覽器模式後再執行</p>
-      
-      <!-- 新增進度顯示區域 -->
-      <div id="resetProgressContainer" style="width:100%; margin:15px 0; background-color:#333; border-radius:4px; overflow:hidden; display:none;">
-        <div id="resetProgress" style="height:6px; width:0%; background:linear-gradient(to right, #4CAF50, #8BC34A); transition:width 0.3s ease; border-radius:4px;"></div>
-        <div id="resetStatusText" style="font-size:14px; color:#aaa; margin-top:8px; text-align:center;">準備中...</div>
-      </div>
-      
       <div class="button-group">
         <button id="confirmIncognito">我已確認關閉</button>
         <button id="cancelIncognito">取消</button>
@@ -720,7 +643,6 @@
     </div>
   </div>
   
-  <!-- 影片教學模態框 -->
   <div id="videoTutorialModal">
     <div class="video-content">
       <button class="close-btn" id="closeVideoModal">×</button>
@@ -731,26 +653,6 @@
       </video>
       <div class="fallback-link" id="videoFallback">
         <a href="https://i.imgur.com/Wnemzxu.mp4" target="_blank">無法播放影片？請點此觀看</a>
-      </div>
-    </div>
-  </div>
-  
-  <!-- iOS Safari特殊說明區塊 -->
-  <div id="iosSafariInfoModal" class="overlay" style="display:none;">
-    <div class="modal">
-      <h3>iOS Safari 使用提示</h3>
-      <div style="text-align:left; margin-bottom:15px;">
-        <p style="margin-bottom:10px;">由於iOS Safari在位置定位方面的特殊性，我們提供以下建議以獲得最佳打卡體驗：</p>
-        <ol style="padding-left:20px; margin-bottom:10px;">
-          <li style="margin-bottom:5px;">保持良好的網路連接(WiFi或4G/5G)</li>
-          <li style="margin-bottom:5px;">確保在「設定 > Safari > 位置服務」已開啟</li>
-          <li style="margin-bottom:5px;">若定位不準確，請嘗試重新啟動Safari或切換網路</li>
-          <li style="margin-bottom:5px;">定位前請稍等片刻，讓系統獲取更穩定的位置</li>
-        </ol>
-        <p style="font-weight:bold; color:#4CAF50;">系統已自動為iOS Safari用戶啟用位置優化功能</p>
-      </div>
-      <div class="modal-buttons">
-        <button id="iosSafariInfoConfirm" class="btn btn-confirm">我已了解</button>
       </div>
     </div>
   </div>
@@ -819,20 +721,6 @@
   /* ====================================
      1) 先宣告 (函式、工具、模組)
   =====================================*/
-
-  /**
-   * iOS Safari定位修復常數
-   * @constant {Object}
-   */
-  const IOS_SAFARI_FIX = {
-    OUTLIER_DISTANCE_THRESHOLD: 1000,  // 異常座標距離閾值 (公尺) - 超過視為爆衝
-    EXTRA_SAFETY_MARGIN: 15,           // 額外安全邊界 (公尺)
-    STRICTER_ACCURACY_VALUE: 35,       // 更嚴格的精度閾值 (公尺)
-    MAX_COORDINATES_AGE: 90000,        // 座標最大年齡 (毫秒)
-    MIN_SAMPLE_COUNT: 2,               // 最少樣本數量
-    RESET_INTERVAL: 3000,              // 位置服務重置間隔 (毫秒)
-    CACHE_CLEAR_DELAY: 500             // 快取清理延遲 (毫秒)
-  };
 
   /**
    * 防抖動函數
@@ -1190,20 +1078,6 @@
         elements.overlay.classList.remove("show");
         if (onCancel) onCancel();
       };
-    },
-    displayIOSMessage: function(message) {
-      if (!elements.responseDiv) return;
-      
-      elements.responseDiv.innerHTML = `
-        <div style="color:#ffeb3b; background-color:rgba(0,0,0,0.2); padding:8px; border-radius:4px; margin-bottom:8px; border-left:3px solid #ffeb3b;">
-          <span style="display:inline-flex; align-items:center;">
-            <span class="material-icons" style="margin-right:8px; font-size:18px;">warning</span>
-            ${message}
-          </span>
-        </div>
-      ` + elements.responseDiv.innerHTML;
-      
-      elements.responseDiv.classList.add("show");
     }
   };
 
@@ -1335,28 +1209,87 @@
         Fonts: BrowserUtils.detectCommonFonts(),
         AppVersion: CONFIG.APP_VERSION
       };
-    },
-    getUpdatedDeviceInfo: function() {
-      const info = this.collectDeviceInfo();
-      info.isIOSSafari = isIOSSafari();
-      info.timestamp = Date.now();
-      
-      // 添加特定的iOS信息
-      if (info.isIOSSafari) {
-        const ua = navigator.userAgent;
-        const iosVersion = (ua.match(/OS (\d+)_(\d+)_?(\d+)?/) || []).slice(1).join('.');
-        const safariVersion = (ua.match(/Version\/(\d+)\.(\d+)(?:\.(\d+))?/) || []).slice(1).join('.');
-        
-        info.iosVersion = iosVersion || 'unknown';
-        info.safariVersion = safariVersion || 'unknown';
-        info.deviceCategory = /iPad/.test(ua) ? 'iPad' : 'iPhone';
-      }
-      
-      return info;
     }
   };
 
   /**
+   * 位置管理 (多點定位)
+   */
+  const LocationManager = {
+    getCurrentLocation: async (sampleCount=5, sampleInterval=500) => {
+      return new Promise(async (resolve, reject) => {
+        if (!("geolocation" in navigator)) {
+          reject("瀏覽器不支援定位");
+          return;
+        }
+        
+        // 顯示更詳細的載入訊息
+        UIUtils.displayLoading(`定位中｜採集 ${sampleCount} 個位置樣本...`);
+        
+        // 添加進度指示
+        let completedSamples = 0;
+        const updateProgress = () => {
+          completedSamples++;
+          UIUtils.displayLoading(`定位中｜已完成 ${completedSamples}/${sampleCount} 個樣本...`);
+        };
+        
+        const getSingleLocation = (index) => {
+          return new Promise((resolveLoc, rejectLoc) => {
+            setTimeout(() => {
+              navigator.geolocation.getCurrentPosition(
+                position => {
+                  let ts = position.timestamp;
+                  if (ts < 1e11) ts = ts*1000;
+                  console.log(`位置採樣 #${index+1} 成功: 精度=${position.coords.accuracy}m`);
+                  updateProgress(); // 更新進度
+                  resolveLoc({
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                    accuracy: position.coords.accuracy,
+                    timestamp: ts,
+                    sampleIndex: index
+                  });
+                },
+                error => {
+                  console.warn(`位置採樣 #${index+1} 失敗: ${error.code}-${error.message}`);
+                  updateProgress(); // 更新進度
+                  rejectLoc(error);
+                },
+                { 
+                  enableHighAccuracy: true, 
+                  timeout: 10000, 
+                  maximumAge: 0 
+                }
+              );
+            }, index*sampleInterval);
+          });
+        };
+        
+        try {
+          const locationPromises = Array.from({length:sampleCount}, (_,i) =>
+            getSingleLocation(i).catch(()=> null)
+          );
+          const results = await Promise.allSettled(locationPromises);
+          const successfulResults = results
+            .filter(r=>r.status==='fulfilled' && r.value!==null)
+            .map(r=>r.value);
+          console.log(`位置採樣結果: ${successfulResults.length}/${sampleCount} 成功`);
+          if (successfulResults.length>0) {
+            const sortedCoords = successfulResults.sort((a,b)=>
+              (a.accuracy||9999)-(b.accuracy||9999)
+            );
+            resolve(sortedCoords);
+          } else {
+            reject("無法獲取足夠的位置數據");
+          }
+        } catch(err) {
+          reject(`定位系統錯誤: ${err.message||err}`);
+        }
+      });
+    }
+  };
+
+/**
    * @constant {string} WEB_APP_URL - 部署網址 (GAS)
    */
   const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwQz2Zrzn_QdNfELnr_4djA5T622UYxWhnN9m0oTHwMcHQK2NrbG-ayOKspevbAF3-K/exec";
@@ -1428,472 +1361,6 @@
     btnForm: { from: '#9c27b0', to: '#673ab7' }
   };
 
-/**
-   * 計算兩個座標點之間的距離
-   * @param {number} lat1 第一點緯度
-   * @param {number} lng1 第一點經度
-   * @param {number} lat2 第二點緯度
-   * @param {number} lng2 第二點經度
-   * @returns {number} 兩點之間的距離(公尺)
-   */
-  function calculateDistance(lat1, lng1, lat2, lng2) {
-    const R = 6371e3; // 地球半徑(公尺)
-    const toRad = deg => deg * Math.PI / 180;
-    const dLat = toRad(lat2 - lat1);
-    const dLng = toRad(lng2 - lng1);
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-             Math.cos(toRad(lat1)) *
-             Math.cos(toRad(lat2)) *
-             Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
-
-  /**
-   * 清除位置相關快取
-   * @returns {Promise} 完成清除的Promise
-   */
-  function clearLocationCache() {
-    return new Promise(resolve => {
-      try {
-        if ('caches' in window) {
-          caches.keys().then(cacheNames => {
-            cacheNames.forEach(cacheName => {
-              if (cacheName.includes('geolocation') || cacheName.includes('position')) {
-                caches.delete(cacheName)
-                  .then(() => console.log(`已清除位置快取: ${cacheName}`))
-                  .catch(err => console.warn(`清除位置快取失敗: ${cacheName}`, err));
-              }
-            });
-          }).catch(err => console.warn('快取清除失敗', err));
-        }
-        
-        // 清除localStorage中可能的位置相關項目
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && (key.includes('geo') || 
-                     key.includes('location') || 
-                     key.includes('position') || 
-                     key.includes('coord'))) {
-            keysToRemove.push(key);
-          }
-        }
-        
-        keysToRemove.forEach(key => {
-          try {
-            localStorage.removeItem(key);
-            console.log(`已移除localStorage項目: ${key}`);
-          } catch (e) {
-            console.warn(`移除localStorage項目失敗: ${key}`, e);
-          }
-        });
-        
-        // 確保清除任何sessionStorage項目
-        try {
-          for (let i = 0; i < sessionStorage.length; i++) {
-            const key = sessionStorage.key(i);
-            if (key && (key.includes('geo') || 
-                       key.includes('location') || 
-                       key.includes('position') || 
-                       key.includes('coord'))) {
-              sessionStorage.removeItem(key);
-              console.log(`已移除sessionStorage項目: ${key}`);
-            }
-          }
-        } catch (e) {
-          console.warn('清除sessionStorage失敗', e);
-        }
-        
-        // 延遲一下以確保清除完成
-        setTimeout(() => {
-          console.log('位置快取清除完成');
-          resolve(true);
-        }, IOS_SAFARI_FIX.CACHE_CLEAR_DELAY);
-      } catch (err) {
-        console.error('清除位置快取時出錯:', err);
-        resolve(false); // 即使出錯也繼續
-      }
-    });
-  }
-
-  /**
-   * 強制重新初始化位置服務
-   * @returns {Promise} 重置完成的Promise
-   */
-  function forceGeolocationReset() {
-    return new Promise(async (resolve) => {
-      // 首先清除快取
-      await clearLocationCache();
-      
-      if (!navigator.geolocation) {
-        console.warn('瀏覽器不支援地理位置API');
-        resolve(false);
-        return;
-      }
-      
-      try {
-        const watchId = navigator.geolocation.watchPosition(
-          () => {}, // 成功回調為空
-          () => {}, // 錯誤回調為空
-          { enableHighAccuracy: true, timeout: 1000, maximumAge: 0 }
-        );
-        
-        // 立即清除 watchPosition
-        if (watchId !== undefined) {
-          navigator.geolocation.clearWatch(watchId);
-        }
-        
-        // 發起一個故意會超時的請求，強制重置
-        navigator.geolocation.getCurrentPosition(
-          () => {}, // 成功回調為空
-          () => {}, // 錯誤回調為空
-          { enableHighAccuracy: true, timeout: 1, maximumAge: 0 }
-        );
-        
-        // 延遲以確保重置有足夠時間生效
-        setTimeout(() => {
-          console.log('位置服務重置完成');
-          resolve(true);
-        }, IOS_SAFARI_FIX.RESET_INTERVAL);
-      } catch (err) {
-        console.error('重置位置服務時出錯:', err);
-        resolve(false);
-      }
-    });
-  }
-
-  /**
-   * 過濾位置樣本，移除異常值
-   * @param {Array} samples 座標樣本數組
-   * @returns {Array} 過濾後的座標數組
-   */
-  function filterLocationSamples(samples) {
-    if (!samples || samples.length === 0) {
-      return [];
-    }
-    
-    if (samples.length === 1) {
-      return samples;
-    }
-    
-    // 按精確度排序(從高到低)
-    const sortedSamples = [...samples].sort((a, b) => {
-      const accuracyA = a.accuracy || 9999;
-      const accuracyB = b.accuracy || 9999;
-      return accuracyA - accuracyB;
-    });
-    
-    // 找出精度最高的樣本作為參考點
-    const reference = sortedSamples[0];
-    
-    // 篩選出距離參考點不超過閾值的樣本
-    const validSamples = sortedSamples.filter(sample => {
-      if (sample === reference) return true;
-      
-      const distance = calculateDistance(
-        reference.lat, reference.lng,
-        sample.lat, sample.lng
-      );
-      
-      return distance <= IOS_SAFARI_FIX.OUTLIER_DISTANCE_THRESHOLD;
-    });
-    
-    if (validSamples.length < IOS_SAFARI_FIX.MIN_SAMPLE_COUNT) {
-      // 如果有效樣本不足，返回前兩個樣本
-      return samples.slice(0, 2);
-    }
-    
-    return validSamples;
-  }
-
-  /**
-   * 獲取位置錯誤的友好訊息
-   * @param {PositionError} error 位置錯誤對象
-   * @returns {string} 友好錯誤訊息
-   */
-  function getPositionErrorMessage(error) {
-    if (!error || !error.code) {
-      return '未知位置錯誤';
-    }
-    
-    switch (error.code) {
-      case 1: // PERMISSION_DENIED
-        return '請允許位置權限｜請開啟設定檢查';
-      case 2: // POSITION_UNAVAILABLE
-        return '無法獲取當前位置｜請確認GPS已開啟';
-      case 3: // TIMEOUT
-        return '位置請求超時｜請檢查網路連接';
-      default:
-        return `位置錯誤 (${error.code}): ${error.message || '未知錯誤'}`;
-    }
-  }
-
-  /**
-   * 更新位置重置狀態顯示
-   * @param {string} status 狀態訊息
-   * @param {number} progress 進度 (0-100)
-   */
-  function updateResetStatus(status, progress = null) {
-    const statusElement = document.getElementById('resetStatusText');
-    const progressElement = document.getElementById('resetProgress');
-    
-    if (statusElement) {
-      statusElement.textContent = status;
-    }
-    
-    if (progressElement && progress !== null) {
-      progressElement.style.width = `${progress}%`;
-    }
-  }
-
-  /**
-   * 檢測是否為iOS Safari
-   * @returns {boolean} 是否為iOS Safari
-   */
-  function isIOSSafari() {
-    const ua = navigator.userAgent.toLowerCase();
-    const isIOS = /iphone|ipad|ipod/.test(ua);
-    const isSafari = /safari/.test(ua) && !/chrome/.test(ua);
-    return isIOS && isSafari;
-  }
-
-  /**
-   * iOS Safari位置優化流程
-   * @returns {Promise<boolean>} 優化完成的Promise
-   */
-  async function performIOSSafariOptimization() {
-    try {
-      // 顯示進度容器
-      const progressContainer = document.getElementById('resetProgressContainer');
-      if (progressContainer) progressContainer.style.display = 'block';
-      
-      // 隱藏按鈕組
-      const buttonGroup = document.querySelector('#incognitoPrompt .button-group');
-      if (buttonGroup) buttonGroup.style.display = 'none';
-      
-      // 更新狀態
-      updateResetStatus('開始位置服務優化...', 10);
-      
-      // 第一步：清除位置快取
-      await new Promise(resolve => setTimeout(resolve, 500));
-      updateResetStatus('正在清除位置快取...', 30);
-      await clearLocationCache();
-      
-      // 第二步：重置位置服務
-      updateResetStatus('正在重置位置服務...', 60);
-      await forceGeolocationReset();
-      
-      // 第三步：獲取測試位置
-      updateResetStatus('正在測試位置服務...', 80);
-      
-      try {
-        // 只請求一個樣本，目的只是測試服務是否正常
-        await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(
-            position => {
-              console.log("位置服務測試成功:", position.coords.latitude, position.coords.longitude);
-              resolve(position);
-            },
-            error => {
-              console.warn("位置服務測試失敗:", getPositionErrorMessage(error));
-              reject(error);
-            },
-            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-          );
-        });
-        
-        // 完成
-        updateResetStatus('位置服務優化完成!', 100);
-        
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return true;
-      } catch (error) {
-        // 測試位置失敗，但仍然算作優化完成
-        updateResetStatus(`優化完成，但測試失敗: ${getPositionErrorMessage(error)}`, 100);
-        
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        return false;
-      }
-    } catch (error) {
-      console.error("iOS Safari優化錯誤:", error);
-      
-      // 更新錯誤狀態
-      updateResetStatus(`優化過程發生錯誤: ${error.message || '未知錯誤'}`, 100);
-      
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      return false;
-    } finally {
-      // 恢復按鈕組顯示
-      const buttonGroup = document.querySelector('#incognitoPrompt .button-group');
-      if (buttonGroup) buttonGroup.style.display = 'flex';
-      
-      // 隱藏進度容器
-      const progressContainer = document.getElementById('resetProgressContainer');
-      if (progressContainer) progressContainer.style.display = 'none';
-    }
-  }
-
-  /**
-   * 確認離開無痕模式和iOS Safari優化
-   */
-  async function handleConfirmIncognito() {
-    // 檢測是否為iOS Safari
-    const isiOSSafari = isIOSSafari();
-    
-    if (isiOSSafari) {
-      try {
-        // 執行iOS Safari優化
-        await performIOSSafariOptimization();
-      } catch (error) {
-        console.error("iOS Safari優化失敗:", error);
-      }
-    }
-    
-    // 最終關閉提示框
-    elements.incognitoPrompt.style.display = "none";
-  }
-
-  /**
-   * 位置管理 (多點定位)
-   */
-  const LocationManager = {
-    isResetting: false,
-    resetAttempts: 0,
-    maxResetAttempts: 2,
-
-    // 保存原始方法以便後續覆蓋
-    originalGetCurrentLocation: function(sampleCount=5, sampleInterval=500) {
-      return new Promise(async (resolve, reject) => {
-        if (!("geolocation" in navigator)) {
-          reject("瀏覽器不支援定位");
-          return;
-        }
-        
-        // 顯示更詳細的載入訊息
-        UIUtils.displayLoading(`定位中｜採集 ${sampleCount} 個位置樣本...`);
-        
-        // 添加進度指示
-        let completedSamples = 0;
-        const updateProgress = () => {
-          completedSamples++;
-          UIUtils.displayLoading(`定位中｜已完成 ${completedSamples}/${sampleCount} 個樣本...`);
-        };
-        
-        const getSingleLocation = (index) => {
-          return new Promise((resolveLoc, rejectLoc) => {
-            setTimeout(() => {
-              navigator.geolocation.getCurrentPosition(
-                position => {
-                  let ts = position.timestamp;
-                  if (ts < 1e11) ts = ts*1000;
-                  console.log(`位置採樣 #${index+1} 成功: 精度=${position.coords.accuracy}m`);
-                  updateProgress(); // 更新進度
-                  resolveLoc({
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude,
-                    accuracy: position.coords.accuracy,
-                    timestamp: ts,
-                    sampleIndex: index
-                  });
-                },
-                error => {
-                  console.warn(`位置採樣 #${index+1} 失敗: ${error.code}-${error.message}`);
-                  updateProgress(); // 更新進度
-                  rejectLoc(error);
-                },
-                { 
-                  enableHighAccuracy: true, 
-                  timeout: 10000, 
-                  maximumAge: 0 
-                }
-              );
-            }, index*sampleInterval);
-          });
-        };
-        
-        try {
-          const locationPromises = Array.from({length:sampleCount}, (_,i) =>
-            getSingleLocation(i).catch(()=> null)
-          );
-          const results = await Promise.allSettled(locationPromises);
-          const successfulResults = results
-            .filter(r=>r.status==='fulfilled' && r.value!==null)
-            .map(r=>r.value);
-          console.log(`位置採樣結果: ${successfulResults.length}/${sampleCount} 成功`);
-          if (successfulResults.length>0) {
-            const sortedCoords = successfulResults.sort((a,b)=>
-              (a.accuracy||9999)-(b.accuracy||9999)
-            );
-            resolve(sortedCoords);
-          } else {
-            reject("無法獲取足夠的位置數據");
-          }
-        } catch(err) {
-          reject(`定位系統錯誤: ${err.message||err}`);
-        }
-      });
-    },
-
-    /**
-     * 增強版獲取當前位置(iOS Safari優化)
-     * @param {number} sampleCount 樣本數量
-     * @param {number} sampleInterval 樣本間隔(毫秒)
-     * @returns {Promise} 包含位置信息的Promise
-     */
-    getCurrentLocation: async function(sampleCount=5, sampleInterval=500) {
-      // 如果正在重置，拒絕新的請求
-      if (this.isResetting) {
-        return Promise.reject("位置服務正在重置中，請稍候");
-      }
-      
-      // 檢測是否為iOS Safari
-      const isiOSSafari = isIOSSafari();
-      
-      try {
-        // 正常流程嘗試獲取位置
-        const coords = await this.originalGetCurrentLocation(sampleCount, sampleInterval);
-        
-        // 如果是iOS Safari，額外過濾座標
-        if (isiOSSafari) {
-          console.log("iOS Safari檢測到，應用特殊處理");
-          return filterLocationSamples(coords);
-        }
-        
-        return coords;
-      } catch (error) {
-        // 位置獲取失敗
-        console.error("位置獲取失敗:", error);
-        
-        // 如果是iOS Safari且尚未達到最大重置次數，則嘗試重置
-        if (isiOSSafari && this.resetAttempts < this.maxResetAttempts) {
-          this.resetAttempts++;
-          this.isResetting = true;
-          
-          console.log(`正在重置位置服務 (嘗試 ${this.resetAttempts}/${this.maxResetAttempts})`);
-          UIUtils.displayLoading(`位置服務重置中 (${this.resetAttempts}/${this.maxResetAttempts})...`);
-          
-          try {
-            await forceGeolocationReset();
-            this.isResetting = false;
-            
-            // 重新嘗試獲取位置
-            return this.originalGetCurrentLocation(sampleCount, sampleInterval);
-          } catch (resetError) {
-            this.isResetting = false;
-            throw resetError || error;
-          }
-        }
-        
-        // 無法恢復，拋出原始錯誤
-        throw error;
-      } finally {
-        // 無論成功失敗，重置標記最終都應清除
-        this.isResetting = false;
-      }
-    }
-  };
-
 /* ====================================
      2) 主要功能函式 (打卡、定位、表單)
   =====================================*/
@@ -1934,8 +1401,7 @@
   }
 
   /**
-   * 更新版測試定位功能
-   * @param {HTMLButtonElement} button 觸發的按鈕元素
+   * 測試定位功能
    */
   async function testLocation(button) {
     // 設置操作狀態為進行中
@@ -1956,35 +1422,17 @@
       UIUtils.enableAllButtonsExcept(button);
       return;
     }
-    
     UIUtils.displayLoading("定位測試中｜請稍候...");
-    
+
     try {
-      // 檢測是否為iOS Safari並提供相關提示
-      const isiOSSafari = isIOSSafari();
-      if (isiOSSafari) {
-        UIUtils.displayIOSMessage("檢測到iOS Safari，啟用特殊定位優化");
-      }
-      
-      // 收集設備信息
-      const deviceInfo = DeviceInfoManager.getUpdatedDeviceInfo();
-      const deviceInfoStr = JSON.stringify(deviceInfo);
-      
-      // 獲取位置樣本（增加到5個樣本）
-      const coordsList = await LocationManager.getCurrentLocation(5, 500);
-      
-      // 將設備信息一併傳遞給後端
-      const result = await NetworkUtils.callGASWithRetry("testLocationWithAuth", [
-        idCode, 
-        coordsList, 
-        deviceInfoStr  // 新增參數：傳遞設備信息
-      ]);
+      const coordsList = await LocationManager.getCurrentLocation(5, 500); // 增加到5個樣本
+      const result = await NetworkUtils.callGASWithRetry("testLocationWithAuth", [idCode, coordsList]);
 
       if (result.status === "success") {
         elements.responseDiv.innerHTML = result.html
           ? `<div class="table-responsive">${result.html}</div>` : "無資料";
         
-        // 檢查並顯示穩定性相關警告
+        // 新增: 檢查並顯示穩定性相關警告
         if (result.detail?.stability !== undefined && result.detail.stability < 0.7) {
           const stabilityWarning = document.createElement('div');
           stabilityWarning.style.color = '#FFC107';
@@ -1992,16 +1440,6 @@
           stabilityWarning.style.fontSize = '14px';
           stabilityWarning.innerHTML = `<i class="material-icons" style="vertical-align:middle;font-size:16px;margin-right:5px;">warning</i>GPS 信號不穩定 (${Math.round(result.detail.stability*100)}%)`;
           elements.responseDiv.appendChild(stabilityWarning);
-        }
-        
-        // 顯示iOS Safari特殊處理的相關信息
-        if (result.detail?.isIOSSafari) {
-          const iosSafariInfo = document.createElement('div');
-          iosSafariInfo.style.color = '#4CAF50';
-          iosSafariInfo.style.marginTop = '10px';
-          iosSafariInfo.style.fontSize = '14px';
-          iosSafariInfo.innerHTML = `<i class="material-icons" style="vertical-align:middle;font-size:16px;margin-right:5px;">check_circle</i>iOS Safari 優化已啟用`;
-          elements.responseDiv.appendChild(iosSafariInfo);
         }
         
         elements.responseDiv.classList.add("show");
@@ -2013,12 +1451,7 @@
         UIUtils.enableAllButtonsExcept(button);
       }
     } catch(err) {
-      // 判斷是否為位置錯誤
-      if (err.code && (err.code === 1 || err.code === 2 || err.code === 3)) {
-        UIUtils.displayError(`位置獲取失敗: ${getPositionErrorMessage(err)}`);
-      } else {
-        UIUtils.displayError(`測試失敗: ${err.message}`);
-      }
+      UIUtils.displayError(`測試失敗: ${err.message}`);
       UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
       UIUtils.enableAllButtonsExcept(button);
     } finally {
@@ -2172,11 +1605,7 @@
   }
 
   /**
-   * 更新版實際打卡動作
-   * @param {string} action 打卡動作（上班/下班）
-   * @param {boolean} force 是否強制打卡
-   * @param {boolean} bindDevice 是否綁定設備
-   * @param {HTMLButtonElement} button 觸發的按鈕元素
+   * 實際打卡動作 (多點定位 + JSONP)
    */
   async function handleAction(action, force, bindDevice, button) {
     // 保持操作狀態為進行中
@@ -2187,16 +1616,9 @@
     UIUtils.displayLoading("審核中｜請稍候...");
 
     try {
-      // 檢測是否為iOS Safari
-      const isiOSSafari = isIOSSafari();
-      if (isiOSSafari) {
-        UIUtils.displayIOSMessage("檢測到iOS Safari，啟用特殊定位優化");
-      }
-      
-      // 收集設備信息（新版本支持iOS Safari）
-      const deviceInfo = JSON.stringify(DeviceInfoManager.getUpdatedDeviceInfo());
-      const currentDeviceInfo = JSON.stringify(DeviceInfoManager.getUpdatedDeviceInfo());
       const coordsList = await LocationManager.getCurrentLocation(5, 500); // 增加到5個樣本
+      const deviceInfo = JSON.stringify(DeviceInfoManager.collectDeviceInfo());
+      const currentDeviceInfo = JSON.stringify(DeviceInfoManager.collectDeviceInfo());
       const uuid = await DeviceIdManager.getDeviceUuid();
       const ip = await NetworkUtils.getIPAddress();
       console.log(`開始${action}打卡請求...`);
@@ -2223,11 +1645,6 @@
           finalMsg += `<br><span style="color:${stabilityColor};">GPS 信號穩定度: ${stabilityPercent}%</span>`;
         }
         
-        // 添加iOS Safari特殊處理的提示
-        if (result.detail?.isIOSSafari) {
-          finalMsg += `<br><span style="color:#4CAF50;">iOS Safari 優化已啟用</span>`;
-        }
-        
         if (result.detail?.gpsAccuracy) {
           finalMsg += `<br><span style="color:#76ff03;">${result.detail.gpsAccuracy}</span>`;
         }
@@ -2246,53 +1663,19 @@
         } else if (result.error === "BROWSER.UNSUPPORTED") {
           finalMsg = "瀏覽器不支援｜應使用Chrome、Firefox或Edge";
         } else if (result.error === "AUTH.DEVICE_MISMATCH") {
-          finalMsg += "<br><span style='color:yellow;'>裝置異常｜請洽營運組</span>";
+          finalMsg += "<br><span style='color:yellow;'>裝置異常請洽營運組</span>";
         } else if (result.error === "AUTH.DEVICE_TYPE_MISMATCH") {
           finalMsg += "<br><span style='color:yellow;'>綁定裝置不符｜請洽營運組</span>";
         }
-        
-        // 對於位置相關錯誤，如果是iOS Safari，添加特殊提示
-        if (isiOSSafari && (
-            result.error === "GPS.INVALID_COORDS" || 
-            result.error === "GPS.INVALID_FORMAT" || 
-            result.error === "GPS.OUT_OF_RANGE")) {
-          finalMsg += "<br><span style='color:#FFC107;'>iOS設備可能需要重設位置服務</span>";
-          
-          // 添加重置位置服務的按鈕
-          finalMsg += `<br><button id="resetLocationBtn" style="margin-top:10px; padding:8px 15px; background:#2196F3; color:white; border:none; border-radius:4px; cursor:pointer;">重設位置服務</button>`;
-          
-          // 為按鈕添加點擊事件（在訊息顯示後）
-          setTimeout(() => {
-            const resetBtn = document.getElementById('resetLocationBtn');
-            if (resetBtn) {
-              resetBtn.addEventListener('click', async () => {
-                UIUtils.displayLoading("正在重置位置服務，請稍候...");
-                try {
-                  await forceGeolocationReset();
-                  UIUtils.displaySuccess("位置服務已重置，請再次嘗試打卡");
-                } catch (err) {
-                  UIUtils.displayError(`位置服務重置失敗: ${err.message}`);
-                }
-              });
-            }
-          }, 100);
-        }
-        
         if (result.detail) {
-          finalMsg += `<br><span style="font-size:14px; color:#999;">詳細資訊: ${JSON.stringify(result.detail)}</span>`;
+          finalMsg += `<br><span style="font-size:14px;">詳細資訊: ${JSON.stringify(result.detail)}</span>`;
         }
-        
         UIUtils.displayError(finalMsg);
         UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
         UIUtils.enableAllButtonsExcept(button);
       }
     } catch(err) {
-      // 判斷是否為位置錯誤
-      if (err.code && (err.code === 1 || err.code === 2 || err.code === 3)) {
-        UIUtils.displayError(`位置獲取失敗: ${getPositionErrorMessage(err)}`);
-      } else {
-        UIUtils.displayError(`連線失敗: ${err.message}`);
-      }
+      UIUtils.displayError(`連線失敗: ${err.message}`);
       UIUtils.startIndividualCooldown(button, CONFIG.COOLDOWN_MS, button.dataset.originalText);
       UIUtils.enableAllButtonsExcept(button);
     } finally {
@@ -2304,9 +1687,6 @@
      3) 綁定事件 & 初始化
   =====================================*/
 
-  /**
-   * 設置事件監聽器
-   */
   function setupEventListeners() {
     // 切換密碼顯示
     elements.toggleBtn.addEventListener("click", () => {
@@ -2332,7 +1712,6 @@
         UIUtils.disableAllButtons();
       }
     });
-    
     elements.idInput.addEventListener("blur", () => {
       elements.errorSpan.textContent = "";
       elements.errorSpan.classList.remove("show");
@@ -2346,20 +1725,14 @@
       elements.videoFallback.style.display = "block";
     });
 
-    // 無痕瀏覽器提示 - 更新確認按鈕事件以支持iOS Safari優化
-    elements.confirmIncognito.addEventListener("click", handleConfirmIncognito);
+    // 無痕瀏覽器提示
+    elements.confirmIncognito.addEventListener("click", () => {
+      elements.incognitoPrompt.style.display = "none";
+    });
     elements.cancelIncognito.addEventListener("click", () => {
       alert("已取消｜無法使用系統");
       window.location.href="about:blank";
     });
-
-    // iOS Safari資訊確認按鈕事件
-    const iosSafariInfoConfirm = document.getElementById('iosSafariInfoConfirm');
-    if (iosSafariInfoConfirm) {
-      iosSafariInfoConfirm.addEventListener('click', function() {
-        document.getElementById('iosSafariInfoModal').style.display = 'none';
-      });
-    }
 
     // 功能按鈕
     elements.allButtons.btnOn.addEventListener("click", () =>
@@ -2413,88 +1786,15 @@
     });
   }
 
-  /**
-   * 初始化函數
-   */
   function init() {
-    // 嘗試恢復設備ID
     DeviceIdManager.recoverDeviceId();
-    
-    // 檢測並顯示Safari通知
     BrowserUtils.showSafariNotice();
-    
-    // 設置事件監聽
     setupEventListeners();
-    
-    // 更新網絡狀態
     NetworkUtils.updateNetworkStatus();
-    
-    // 替換為增強版無痕模式處理
-    handleIncognitoMode();
-    
-    // 定期檢查設備ID一致性
+    elements.incognitoPrompt.style.display="flex";
     setInterval(DeviceIdManager.validateStoredIds, CONFIG.CONSISTENCY_CHECK_INTERVAL);
-    
-    // 檢查是否為iOS Safari，並顯示特殊提示
-    if (typeof isIOSSafari === 'function' && isIOSSafari()) {
-      // 首次訪問時顯示iOS Safari說明
-      const hasSeenIOSTip = localStorage.getItem('hasSeenIOSTip');
-      if (!hasSeenIOSTip) {
-        // 設置定時器，等待無痕模式提示關閉後顯示
-        setTimeout(function() {
-          if (document.getElementById('incognitoPrompt').style.display === 'none') {
-            document.getElementById('iosSafariInfoModal').style.display = 'flex';
-            localStorage.setItem('hasSeenIOSTip', 'true');
-          } else {
-            // 如果無痕模式提示還在，再等待1秒
-            setTimeout(function() {
-              document.getElementById('iosSafariInfoModal').style.display = 'flex';
-              localStorage.setItem('hasSeenIOSTip', 'true');
-            }, 1000);
-          }
-        }, 500);
-      }
-    }
   }
 
-  /**
-   * 無痕模式處理增強版
-   */
-  function handleIncognitoMode() {
-    try {
-      // 檢測是否為iOS Safari
-      const isiOSSafari = isIOSSafari();
-      
-      // 如果是iOS Safari，提供特殊處理選項
-      if (isiOSSafari) {
-        // 更新無痕提示文字
-        const promptTitle = document.querySelector('#incognitoPrompt h2');
-        const promptText = document.querySelector('#incognitoPrompt p');
-        const confirmBtn = document.getElementById('confirmIncognito');
-        
-        if (promptTitle) promptTitle.textContent = "iOS Safari檢測";
-        if (promptText) promptText.innerHTML = "檢測到您正在使用iOS Safari瀏覽器<br>需要進行位置服務優化以確保打卡成功";
-        if (confirmBtn) confirmBtn.textContent = "開始位置優化";
-        
-        // 添加進度顯示區域，如果不存在的話
-        if (!document.getElementById('resetProgressContainer')) {
-          const progressContainer = document.getElementById('resetProgressContainer');
-          if (progressContainer) {
-            progressContainer.style.display = 'none';
-          }
-        }
-      }
-      
-      // 顯示無痕提示對話框
-      elements.incognitoPrompt.style.display = "flex";
-    } catch (error) {
-      console.error("無痕模式處理錯誤:", error);
-      // 出錯時直接顯示普通提示
-      elements.incognitoPrompt.style.display = "flex";
-    }
-  }
-
-  // 註冊事件監聽器
   window.addEventListener("online", NetworkUtils.updateNetworkStatus);
   window.addEventListener("offline", NetworkUtils.updateNetworkStatus);
   window.addEventListener("load", init);
